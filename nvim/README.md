@@ -22,6 +22,8 @@ nvim src/arquivo.ts
 
 O autocomplete aparece enquanto você escreve. `Tab`/`Shift+Tab` ou as setas selecionam; `Enter` aceita a seleção. Sem seleção, Enter insere uma nova linha. `Ctrl+Espaço` abre as sugestões manualmente. `Esc` fecha o menu; outro Esc volta à navegação.
 
+A IA sugere uma continuação diretamente no código, na cor dos comentários. Depois de digitar, pare por um segundo para iniciar o pedido ao Codex. `Alt+;` aceita a sugestão, `Alt+S` pede outra e `Alt+X` descarta. A resposta pode levar alguns segundos.
+
 ### Entender os comandos
 
 Há três formas de usar o editor:
@@ -282,13 +284,39 @@ Outros atalhos:
 
 Durante um conflito, abra `Espaço g d` e selecione o arquivo em conflito. O layout mostra as versões e o resultado editável. Revise o resultado, salve e coloque o arquivo resolvido no stage. `g?` mostra os comandos locais do Diffview. Nenhum atalho global descarta alterações automaticamente.
 
+## Autocomplete por IA com Codex
+
+O [codex-complete.nvim](https://github.com/joegoggin/codex-complete.nvim) usa o Codex CLI instalado e o login existente do ChatGPT, pela interface [app-server](https://developers.openai.com/codex/app-server/). Abra `nvim` na pasta do projeto e edite um arquivo com extensão reconhecida. O pedido automático começa após um segundo sem digitar; você também pode solicitá-lo por atalho. Uma sugestão só altera o buffer quando aceita e não salva o arquivo.
+
+| Ação | Teclas ou comando |
+| --- | --- |
+| Aceitar a sugestão de IA inteira | `Alt+;`, enquanto edita |
+| Pedir uma sugestão agora | `Alt+S`, enquanto edita, ou `:CodexComplete` |
+| Descartar a sugestão | `Alt+X`, enquanto edita, ou `:CodexCompleteDismiss` |
+| Ligar ou desligar a IA | `Espaço a t` ou `:CodexCompleteToggle` |
+| Escolher modelo disponível na conta | `Espaço a m` ou `:CodexCompleteModel` |
+| Escolher esforço de raciocínio | `Espaço a e` ou `:CodexCompleteEffort` |
+| Conferir instalação e login | `:checkhealth codex_complete` |
+
+`Tab` continua selecionando itens do menu de linguagem e `Enter` continua aceitando o item selecionado. As sequências com Espaço funcionam no modo normal, depois de Esc.
+
+O modelo padrão é `gpt-6-astra`, como no seu Codex, com esforço `low` para reduzir a espera. Trocar modelo ou esforço pelo seletor vale para a sessão do Neovim. Isso não altera o modelo das conversas do CLI. Cada pedido tem um limite de espera de 45 segundos.
+
+O contexto reúne até 2.000 linhas antes do cursor e 500 depois, limitado a 128 KiB. A busca por definições e símbolos relacionados acrescenta até 24 trechos, limitados a outros 128 KiB, usando os servidores de linguagem, buffers abertos e arquivos do projeto. Alterações ainda não salvas nos buffers relacionados também entram nessa coleta. São limites de texto coletado em bytes, não o tamanho da janela de tokens do modelo. O Codex pode consultar outros arquivos do projeto em modo somente leitura.
+
+Cada conclusão usa uma conversa temporária própria. Ela não herda o histórico do painel de chat nem inclui o repositório inteiro automaticamente. O modo somente leitura impede que o agente grave alterações durante a geração; o aceite no Neovim insere apenas a sugestão mostrada. Continuar digitando, mover o cursor ou sair do buffer cancela pedidos desatualizados.
+
+O autocomplete cobre as linguagens de código configuradas, incluindo Odin, Godot, Groovy, Terraform e Haskell. Markdown, texto comum, mensagens de commit e buffers de terminal ficam fora. O coletor exclui nomes como `.env`, `.pem` e arquivos de credenciais; esse filtro não restringe todas as leituras que o agente pode fazer por conta própria. Enquanto a IA estiver ligada, trechos de código são enviados ao serviço do Codex e consomem os limites de uso da conta.
+
+Se nenhuma sugestão aparecer, confira `:set filetype?` e `:checkhealth codex_complete`, depois tente `:CodexComplete` para ver a mensagem de erro. `Espaço n` abre o histórico de notificações. No terminal, `codex login status` verifica a autenticação. A verificação de saúde confere instalação e login, mas não gera uma sugestão de teste.
+
 ## Conversas de IA
 
 `Espaço a n` abre ou oculta o painel do Codex no projeto atual. O painel usa o CLI e a conta já configurados na máquina. Para começar outra conversa dentro dele, use `/new`.
 
 `Espaço a r` abre `codex resume`, com o seletor das conversas anteriores do diretório. Para procurar também em outros diretórios, execute `codex resume --all` no terminal integrado.
 
-As conversas ficam no histórico do Codex, separadas das threads do Zed. Esta configuração não importa conversas antigas do Zed e não adiciona previsão de texto por IA ao autocomplete: as sugestões de código vêm dos servidores de linguagem. O painel de IA é interativo e só recebe o que você envia nele.
+As conversas ficam no histórico do Codex, separadas das threads do Zed. Esta configuração não importa conversas antigas do Zed. O painel serve para conversar e pedir mudanças maiores; o autocomplete por IA usa pedidos separados, conforme a seção anterior.
 
 ## Pull requests e threads do GitHub
 
@@ -383,13 +411,15 @@ Para restaurar o Alacritty, remova apenas o link `~/.config/alacritty/alacritty.
 
 ## Verificações
 
-O teste de integração usa arquivos e commits descartáveis em `/tmp`. Ele não faz commits nos projetos, não envia prompts de IA e não publica comentários no GitHub.
+O teste de integração usa arquivos e commits descartáveis em `/tmp`. Ele não faz commits nos projetos, não envia prompts de IA e não publica comentários no GitHub. Os testes existentes desligam o autocomplete por IA ao iniciar; o teste específico de IA usa um servidor simulado.
 
 Os testes específicos do terminal e da interface Git conferem a preservação de rascunhos, o shell em execução, as cores antes e depois do stage/commit, renomes, remoções, conflitos e autoria da linha. Na validação desses ajustes, a suíte geral parou no teste de copiar com Ctrl+C em modo headless; o mesmo resultado ocorreu com a configuração anterior. A verificação passou a exigir um resultado booleano verdadeiro, evitando que uma resposta nula do processo fosse tratada como sucesso. O comportamento físico de Ctrl+C no Alacritty não foi conferido nessa investigação.
 
 O teste de janelas verifica o histórico sem borda e seu fechamento por Esc, q e Espaço x, bordas explícitas de plugins, diagnósticos, campos de entrada com rótulo visível, popup local do Octo e buscas nos temas claro e escuro. Também confere a divisão vertical e o fechamento de um painel com dois rascunhos preservados.
 
 O teste de imports usa servidores reais de TypeScript, Go e Python. Verifica a abertura de um erro de tipo com Ctrl+Shift+Q, o autoimport ao aceitar uma sugestão do Blink, inclusão/remoção ao salvar, organização manual, preservação de `noqa`, tratamento de timeout e os atalhos de navegação e terminal. As sequências de teclado do Alacritty também foram enviadas a um Neovim em PTY para conferir a decodificação; o teclado físico na janela gráfica não foi conferido.
+
+O teste `neovim-ai.lua` usa o servidor simulado incluído no plugin, sem enviar código à conta. Passaram a sugestão automática, o aceite, o descarte, o cancelamento, a convivência com o Blink, a coleta de mais de 24 KiB do arquivo e a inclusão de uma definição ainda não salva de outro buffer. Os 113 testes do plugin também passaram, e os pedidos de thread e turno foram conferidos com o schema gerado pelo Codex 0.171.0 instalado. O login real foi reconhecido como ChatGPT. A geração real de sugestões não pôde ser validada: o ambiente desta sessão bloqueia gravações em `~/.codex`, necessárias para iniciar o app-server. A latência real e as teclas físicas no Alacritty ainda precisam ser conferidas no uso normal.
 
 As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
 
@@ -402,6 +432,7 @@ nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-terminal.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-git-ui.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-windows.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-imports.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-ai.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check

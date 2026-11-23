@@ -107,6 +107,37 @@ return {
     },
   },
   {
+    "joegoggin/codex-complete.nvim",
+    commit = "19f4afa1352e80147d34132afd546ddfee147e78",
+    main = "codex_complete",
+    lazy = false,
+    opts = function()
+      return {
+        debounce_ms = 1000,
+        highlights = { suggestion = "Comment", background = false },
+        context = {
+          before_lines = 2000,
+          after_lines = 500,
+          max_bytes = 128 * 1024,
+          related = { timeout_ms = 500, max_bytes = 128 * 1024, max_snippets = 24 },
+        },
+        codex = { model = "gpt-6-astra", effort = "low", timeout_ms = 45000 },
+        filetypes = { allow = vim.list_extend(require("codex_complete.config").defaults().filetypes.allow,
+          { "odin", "gdscript", "gdshader", "groovy", "terraform-vars", "lhaskell", "cabal" }) },
+        keymaps = {
+          accept = "<M-;>",
+          trigger = "<M-s>",
+          dismiss = "<M-x>",
+          toggle = "<leader>at",
+          select_model = "<leader>am",
+          select_effort = "<leader>ae",
+          comment_trigger = false,
+          comment_accept = false,
+        },
+      }
+    end,
+  },
+  {
     "neovim/nvim-lspconfig",
     dependencies = { "saghen/blink.cmp", "mason-org/mason.nvim", "mason-org/mason-lspconfig.nvim" },
     config = function() require("languages") end,

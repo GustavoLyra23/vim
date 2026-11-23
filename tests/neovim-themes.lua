@@ -6,6 +6,7 @@ local channel = vim.fn.jobstart({
   "--cmd", "set rtp+=" .. vim.fn.stdpath("data") .. "/lazy/mason.nvim",
   "--cmd", 'lua require("mason-registry").refresh = function() end',
   "-u", root .. "/nvim/init.lua",
+  "-c", "CodexCompleteDisable",
 }, { rpc = true, cwd = root })
 assert(channel > 0)
 local function lua(code, ...)
