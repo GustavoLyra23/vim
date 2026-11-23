@@ -27,10 +27,12 @@ local ok, err = xpcall(function()
     vim.lsp.enable(vim.tbl_keys(require("languages").servers), false)
     local ai = require("codex_complete")
     local cfg = vim.deepcopy(ai._state.config)
-    assert(cfg.enabled and cfg.auto_trigger and cfg.debounce_ms == 1000)
+    assert(cfg.enabled and cfg.auto_trigger and cfg.debounce_ms == 150)
     assert(cfg.highlights.background == false)
     assert(vim.fn.maparg("<leader>ar", "n", false, true).desc == "Codex: retomar conversa")
-    cfg.codex.command = {"python3", ..., "--expect-model", "gpt-6-astra", "--expect-effort", "low", "--delay"}
+    assert(vim.tbl_contains(cfg.codex.command, "shell_tool"))
+    assert(vim.tbl_contains(cfg.codex.command, "skills.include_instructions=false"))
+    cfg.codex.command = {"python3", ..., "--expect-model", "gpt-6-luna", "--expect-effort", "low", "--delay"}
     ai.setup(cfg)
     _G.ai_requests = {}
     local client = ai._state.engine.client
@@ -42,15 +44,22 @@ local ok, err = xpcall(function()
   ]], plugin .. "/tests/fixtures/mock_codex.py")
   lua('vim.cmd.edit(...); vim.api.nvim_buf_set_lines(0,0,-1,false,{\'function exampleGreeting() return "rascunho relacionado" end\'})', fixture .. "/helper.lua")
   lua('vim.cmd.edit(...); vim.api.nvim_win_set_cursor(0,{601,20})', fixture .. "/main.lua")
+  local started = vim.uv.hrtime()
   input("A ")
+  wait_for('return _G.ai_requests["turn/start"] ~= nil', "Pedido automático não chegou ao servidor")
+  local local_delay = (vim.uv.hrtime() - started) / 1e6
+  assert(local_delay < 800, "Atraso local antes do pedido: " .. math.floor(local_delay) .. " ms")
+  print("PASS: pedido iniciado em " .. math.floor(local_delay) .. " ms, com servidor simulado")
   wait_for('return require("codex_complete").status().suggestion_visible', "IA automática não apareceu")
   lua([[
     assert(vim.api.nvim_get_current_line() == "return exampleGreeting ", "Sugestão alterou o buffer antes do aceite")
     local thread, turn = _G.ai_requests["thread/start"], _G.ai_requests["turn/start"]
     assert(thread.ephemeral and thread.sandbox == "read-only" and thread.approvalPolicy == "never")
+    assert(thread.developerInstructions:find("Use only the JSON context", 1, true))
+    assert(not thread.developerInstructions:find("Discover and apply", 1, true), "Prompt voltou a pedir investigação antes da conclusão")
     assert(turn.sandboxPolicy.type == "readOnly" and turn.sandboxPolicy.networkAccess == false)
     local payload = vim.json.decode(turn.input[1].text)
-    assert(#payload.prefix > 24 * 1024 and #payload.prefix + #payload.suffix <= 128 * 1024)
+    assert(#payload.prefix > 24 * 1024 and #payload.prefix + #payload.suffix <= 64 * 1024)
     assert(payload.suffix:find("contexto depois do cursor", 1, true))
     assert(vim.json.encode(payload.related):find("rascunho relacionado", 1, true), "Definição não salva ficou fora do contexto")
   ]])

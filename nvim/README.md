@@ -22,7 +22,7 @@ nvim src/arquivo.ts
 
 O autocomplete aparece enquanto você escreve. `Tab`/`Shift+Tab` ou as setas selecionam; `Enter` aceita a seleção. Sem seleção, Enter insere uma nova linha. `Ctrl+Espaço` abre as sugestões manualmente. `Esc` fecha o menu; outro Esc volta à navegação.
 
-A IA sugere uma continuação diretamente no código, na cor dos comentários. Depois de digitar, pare por um segundo para iniciar o pedido ao Codex. `Alt+;` aceita a sugestão, `Alt+S` pede outra e `Alt+X` descarta. A resposta pode levar alguns segundos.
+A IA sugere uma continuação diretamente no código, na cor dos comentários. Uma pausa de 150 ms na digitação inicia o pedido ao Codex. `Alt+;` aceita a sugestão, `Alt+S` pede outra e `Alt+X` descarta. Os 150 ms são a espera antes do pedido; a resposta remota ainda pode levar segundos.
 
 ### Entender os comandos
 
@@ -286,7 +286,7 @@ Durante um conflito, abra `Espaço g d` e selecione o arquivo em conflito. O lay
 
 ## Autocomplete por IA com Codex
 
-O [codex-complete.nvim](https://github.com/joegoggin/codex-complete.nvim) usa o Codex CLI instalado e o login existente do ChatGPT, pela interface [app-server](https://developers.openai.com/codex/app-server/). Abra `nvim` na pasta do projeto e edite um arquivo com extensão reconhecida. O pedido automático começa após um segundo sem digitar; você também pode solicitá-lo por atalho. Uma sugestão só altera o buffer quando aceita e não salva o arquivo.
+O [codex-complete.nvim](https://github.com/joegoggin/codex-complete.nvim) usa o Codex CLI instalado e o login existente do ChatGPT, pela interface [app-server](https://developers.openai.com/codex/app-server/). Abra `nvim` na pasta do projeto e edite um arquivo com extensão reconhecida. O pedido automático começa após 150 ms sem digitar; você também pode solicitá-lo por atalho. Uma sugestão só altera o buffer quando aceita e não salva o arquivo.
 
 | Ação | Teclas ou comando |
 | --- | --- |
@@ -300,13 +300,17 @@ O [codex-complete.nvim](https://github.com/joegoggin/codex-complete.nvim) usa o 
 
 `Tab` continua selecionando itens do menu de linguagem e `Enter` continua aceitando o item selecionado. As sequências com Espaço funcionam no modo normal, depois de Esc.
 
-O modelo padrão é `gpt-6-astra`, como no seu Codex, com esforço `low` para reduzir a espera. Trocar modelo ou esforço pelo seletor vale para a sessão do Neovim. Isso não altera o modelo das conversas do CLI. Cada pedido tem um limite de espera de 45 segundos.
+O modelo padrão do autocomplete é `gpt-6-luna`, com esforço `low`. Luna está no catálogo da conta e é voltado a tarefas menores e repetitivas, conforme a [documentação de modelos](https://developers.openai.com/codex/models/). Trocar modelo ou esforço pelo seletor vale para a sessão do Neovim. Isso não altera o modelo das conversas do CLI. Cada pedido tem um limite de espera de 15 segundos; esse limite apenas cancela pedidos demorados, não acelera a resposta.
 
-O contexto reúne até 2.000 linhas antes do cursor e 500 depois, limitado a 128 KiB. A busca por definições e símbolos relacionados acrescenta até 24 trechos, limitados a outros 128 KiB, usando os servidores de linguagem, buffers abertos e arquivos do projeto. Alterações ainda não salvas nos buffers relacionados também entram nessa coleta. São limites de texto coletado em bytes, não o tamanho da janela de tokens do modelo. O Codex pode consultar outros arquivos do projeto em modo somente leitura.
+O contexto reúne até 600 linhas antes do cursor e 100 depois, limitado a 64 KiB. A busca por definições e símbolos relacionados acrescenta até oito trechos, limitados a outros 32 KiB, usando os servidores de linguagem, buffers abertos e arquivos do projeto. A coleta local tem um prazo de 100 ms. Alterações ainda não salvas nos buffers relacionados também entram nessa coleta. São limites de texto coletado em bytes, não o tamanho da janela de tokens do modelo.
+
+Para reduzir as etapas de cada sugestão, o prompt pede uma continuação usando apenas o contexto enviado. O processo de autocomplete desativa ferramentas de shell, o snapshot do shell, apps, plugins do Codex, busca web e o servidor MCP Figma configurado na máquina. Também desativa a inclusão automática de instruções de skills. Essas opções são argumentos desse processo e não alteram `~/.codex/config.toml` nem o painel de conversas. Os controles estão na [referência de configuração do Codex](https://developers.openai.com/codex/config-reference/).
+
+A integração ainda cria uma thread temporária e aguarda o turno completo do modelo antes de mostrar a sugestão. Ela depende de rede e processamento remoto; não há garantia de resposta instantânea. O menu de linguagem do Blink continua funcionando durante essa espera. Para conferir a duração do último pedido, use `:lua vim.print(require("codex_complete").status().engine.duration_ms)`; o valor está em milissegundos e não inclui a pausa de 150 ms antes do pedido.
 
 Cada conclusão usa uma conversa temporária própria. Ela não herda o histórico do painel de chat nem inclui o repositório inteiro automaticamente. O modo somente leitura impede que o agente grave alterações durante a geração; o aceite no Neovim insere apenas a sugestão mostrada. Continuar digitando, mover o cursor ou sair do buffer cancela pedidos desatualizados.
 
-O autocomplete cobre as linguagens de código configuradas, incluindo Odin, Godot, Groovy, Terraform e Haskell. Markdown, texto comum, mensagens de commit e buffers de terminal ficam fora. O coletor exclui nomes como `.env`, `.pem` e arquivos de credenciais; esse filtro não restringe todas as leituras que o agente pode fazer por conta própria. Enquanto a IA estiver ligada, trechos de código são enviados ao serviço do Codex e consomem os limites de uso da conta.
+O autocomplete cobre as linguagens de código configuradas, incluindo Odin, Godot, Groovy, Terraform e Haskell. Markdown, texto comum, mensagens de commit e buffers de terminal ficam fora. O coletor exclui nomes como `.env`, `.pem` e arquivos de credenciais. Esse filtro é baseado no nome do arquivo e não identifica segredos escritos em arquivos de código comuns. Enquanto a IA estiver ligada, trechos de código são enviados ao serviço do Codex e consomem os limites de uso da conta.
 
 Se nenhuma sugestão aparecer, confira `:set filetype?` e `:checkhealth codex_complete`, depois tente `:CodexComplete` para ver a mensagem de erro. `Espaço n` abre o histórico de notificações. No terminal, `codex login status` verifica a autenticação. A verificação de saúde confere instalação e login, mas não gera uma sugestão de teste.
 
@@ -381,6 +385,8 @@ Na preparação inicial, a rede impediu parte dos downloads. Na conferência pos
 
 ## Arquivos e manutenção
 
+As configurações ficam em `~/.config/nvim`, um link para `~/dotfiles/nvim`. No editor, `:e $MYVIMRC` abre o arquivo principal. Para ajustar o autocomplete, use `:e ~/.config/nvim/lua/plugins.lua` e procure `codex-complete`. Salve com `Ctrl+S` e reabra o Neovim para carregar as mudanças.
+
 | Caminho | Função |
 | --- | --- |
 | `~/dotfiles/.zshrc` | Adiciona `/opt/nvim-linux-x86_64/bin` ao PATH |
@@ -420,6 +426,8 @@ O teste de janelas verifica o histórico sem borda e seu fechamento por Esc, q e
 O teste de imports usa servidores reais de TypeScript, Go e Python. Verifica a abertura de um erro de tipo com Ctrl+Shift+Q, o autoimport ao aceitar uma sugestão do Blink, inclusão/remoção ao salvar, organização manual, preservação de `noqa`, tratamento de timeout e os atalhos de navegação e terminal. As sequências de teclado do Alacritty também foram enviadas a um Neovim em PTY para conferir a decodificação; o teclado físico na janela gráfica não foi conferido.
 
 O teste `neovim-ai.lua` usa o servidor simulado incluído no plugin, sem enviar código à conta. Passaram a sugestão automática, o aceite, o descarte, o cancelamento, a convivência com o Blink, a coleta de mais de 24 KiB do arquivo e a inclusão de uma definição ainda não salva de outro buffer. Os 113 testes do plugin também passaram, e os pedidos de thread e turno foram conferidos com o schema gerado pelo Codex 0.171.0 instalado. O login real foi reconhecido como ChatGPT. A geração real de sugestões não pôde ser validada: o ambiente desta sessão bloqueia gravações em `~/.codex`, necessárias para iniciar o app-server. A latência real e as teclas físicas no Alacritty ainda precisam ser conferidas no uso normal.
+
+Na revisão de latência, o teste detectou 1.044 ms de atraso antes de enviar o pedido com a configuração anterior. Após o ajuste, mediu 203 ms com o servidor simulado. Isso mede o agendamento e a preparação local, sem o tempo de resposta do serviço. O teste também confere Luna com esforço baixo, o prompt sem investigação extra, os limites de contexto e os atalhos de aceite e cancelamento.
 
 As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
 

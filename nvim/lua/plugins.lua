@@ -109,19 +109,27 @@ return {
   {
     "joegoggin/codex-complete.nvim",
     commit = "19f4afa1352e80147d34132afd546ddfee147e78",
-    main = "codex_complete",
     lazy = false,
     opts = function()
       return {
-        debounce_ms = 1000,
+        debounce_ms = 150,
         highlights = { suggestion = "Comment", background = false },
         context = {
-          before_lines = 2000,
-          after_lines = 500,
-          max_bytes = 128 * 1024,
-          related = { timeout_ms = 500, max_bytes = 128 * 1024, max_snippets = 24 },
+          before_lines = 600,
+          after_lines = 100,
+          max_bytes = 64 * 1024,
+          related = { timeout_ms = 100, max_bytes = 32 * 1024, max_snippets = 8 },
         },
-        codex = { model = "gpt-6-astra", effort = "low", timeout_ms = 45000 },
+        codex = {
+          model = "gpt-6-luna", effort = "low", timeout_ms = 15000,
+          -- Estas opções valem só para o processo de autocomplete.
+          command = {
+            "codex", "--disable", "shell_tool", "--disable", "shell_snapshot",
+            "--disable", "apps", "--disable", "plugins",
+            "-c", "skills.include_instructions=false", "-c", 'web_search="disabled"',
+            "-c", "mcp_servers.figma.enabled=false",
+          },
+        },
         filetypes = { allow = vim.list_extend(require("codex_complete.config").defaults().filetypes.allow,
           { "odin", "gdscript", "gdshader", "groovy", "terraform-vars", "lhaskell", "cabal" }) },
         keymaps = {
@@ -135,6 +143,18 @@ return {
           comment_accept = false,
         },
       }
+    end,
+    config = function(_, opts)
+      -- Reutiliza o prompt de conclusão direta do teste manual do plugin.
+      require("codex_complete.prompt").developer_instructions = table.concat({
+        "You are an inline code completion engine.",
+        "Never call tools, inspect files, run commands, or ask questions.",
+        "Use only the JSON context in the user message.",
+        "Return a JSON object with one field named completion containing exact insertion text.",
+        "Do not repeat the prefix or suffix, and do not use Markdown fences.",
+        "Prefer a concise, idiomatic continuation. Return an empty string when no useful completion is clear.",
+      }, " ")
+      require("codex_complete").setup(opts)
     end,
   },
   {
