@@ -14,7 +14,6 @@ local channel = vim.fn.jobstart({
   -- Instalações usam rede e são verificadas separadamente; este teste usa os LSPs locais.
   "--cmd", 'lua require("mason-registry").refresh = function() end',
   "-u", root .. "/nvim/init.lua",
-  "-c", "CodexCompleteDisable",
 }, { rpc = true, cwd = fixture, env = { PATH = fixture .. "/bin:" .. vim.env.PATH } })
 assert(channel > 0, "Não foi possível iniciar o Neovim de teste")
 local function lua(code, ...)
