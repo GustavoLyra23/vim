@@ -1,0 +1,13 @@
+theme = Adwaita Dark
+background = 1c1c1f
+cursor-text = cell-background
+window-decoration = none
+
+font-family = "Cascadia Code"
+font-style = Regular
+font-style-bold = Bold
+# GNOME Console: 12 pt com zoom de 110%.
+font-size = 13.2
+
+keybind = ctrl+shift+w=close_surface
+keybind = ctrl+shift+d=new_split:right
