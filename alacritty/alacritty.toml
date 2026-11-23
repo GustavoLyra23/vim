@@ -20,9 +20,9 @@ history = 10000
 multiplier = 3
 
 [font]
-normal = { family = "Cascadia Code", style = "Regular" }
+normal = { family = "Cascadia Code", style = "Light" }
 bold = { family = "Cascadia Code", style = "Bold" }
-italic = { family = "Cascadia Code", style = "Italic" }
+italic = { family = "Cascadia Code", style = "Light Italic" }
 bold_italic = { family = "Cascadia Code", style = "Bold Italic" }
 size = 13.0
 

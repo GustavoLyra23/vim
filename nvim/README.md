@@ -119,7 +119,7 @@ O Alacritty mantém seus atalhos atuais e captura algumas combinações, como `C
 
 ### Fonte e legibilidade
 
-O terminal desenha as letras do Neovim e do shell. No Alacritty, a fonte usa Cascadia Code Regular em 13 pt, com itálico da mesma família. O peso Regular tem traços menos finos que o Light usado antes. O fundo do Alacritty também é `#080808`, com opacidade total. Essas mudanças valem para todo o terminal.
+O terminal desenha as letras do Neovim e do shell. No Alacritty, a fonte usa Cascadia Code Light, peso 300, em 13 pt, com Light Italic para o itálico. O peso define a espessura dos traços e não usa pixels como unidade. O fundo do Alacritty também é `#080808`, com opacidade total. Essas mudanças valem para todo o terminal.
 
 O Fontconfig desta máquina já habilita antialiasing e hinting leve, com suavização em tons de cinza. A nitidez depende também da resolução e da escala do monitor; o resultado precisa ser avaliado na sua tela. Peso e tamanho ficam na seção `[font]` de `~/dotfiles/alacritty/alacritty.toml`. Veja a [configuração de fontes do Alacritty](https://alacritty.org/config-alacritty.html#FONT).
 
