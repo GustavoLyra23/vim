@@ -26,6 +26,9 @@ if [[ -x /usr/bin/fish ]]; then
   unset _fish_path
 fi
 
+# Neovim instalado manualmente em /opt.
+path+=(/opt/nvim-linux-x86_64/bin)
+
 if (( $+commands[fd] )); then
   export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
