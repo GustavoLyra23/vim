@@ -1,6 +1,6 @@
 # Neovim no dia a dia
 
-Configuração de Gustavo, preparada em 23/11/2026. Usa a paleta Tomorrow Night e atalhos do mapa JetBrains selecionado no Zed. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
+Configuração de Gustavo, preparada em 23/11/2026. Usa as cores Adwaita Dark do Ghostty, com o mesmo fundo personalizado `#1c1c1f`, e atalhos do mapa JetBrains selecionado no Zed. A paleta do terminal integrado e as cores da seleção também seguem o Ghostty. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
 
 ## Começar
 
@@ -21,6 +21,32 @@ nvim src/arquivo.ts
 - `Espaço n` abre o histórico de notificações, incluindo erros de plugins e instalações.
 
 O autocomplete aparece enquanto você escreve. `Tab`/`Shift+Tab` ou as setas selecionam; `Enter` aceita a seleção. Sem seleção, Enter insere uma nova linha. `Ctrl+Espaço` abre as sugestões manualmente. `Esc` fecha o menu; outro Esc volta à navegação.
+
+### Entender os comandos
+
+Há três formas de usar o editor:
+
+- No terminal, `nvim arquivo` abre ou cria um arquivo. `nvim` sozinho abre a tela inicial.
+- Dentro do Neovim, `i` entra no modo de edição e `Esc` volta ao modo normal, usado para navegar e executar atalhos. Se o menu de autocomplete estiver aberto, pressione Esc novamente.
+- No modo normal, `:` abre a linha de comandos. Digite o comando e pressione Enter. Por exemplo, `:w` salva o arquivo.
+
+`Ctrl+S` significa segurar Ctrl e apertar S. Já `Espaço g d` significa apertar Espaço, soltar, apertar g e depois d. Não segure Espaço. As sequências com Espaço funcionam no modo normal. Quando encontrar `<leader>` em uma configuração, ele significa Espaço nesta instalação.
+
+| Comando | O que faz |
+| --- | --- |
+| `:w` | Salva o arquivo atual |
+| `:w nome-do-arquivo` | Dá um nome e salva um arquivo novo |
+| `:q` | Fecha a janela atual; avisa se houver alterações sem salvar |
+| `:wq` | Salva o arquivo e fecha a janela atual |
+| `:q!` | Fecha sem salvar; use quando quiser abandonar as alterações |
+| `:NeovimGuia` | Abre este guia |
+| `:Mason` | Mostra os servidores de linguagem e suas instalações |
+
+Para treinar, execute `nvim /tmp/treino-neovim.txt` no terminal. Aperte `i`, escreva uma frase e pressione Esc. Digite `:w` e Enter para salvar; depois `:q` e Enter para sair. Abra o mesmo arquivo novamente para conferir o texto salvo.
+
+No trabalho, comece com `Ctrl+E` para escolher um arquivo, `i` para editar e `Ctrl+S` para salvar. Pressione Esc e Espaço quando precisar descobrir uma ação. `Espaço g d` abre o diff; `Espaço g s` prepara o trecho atual para um commit; `Espaço g g` abre o painel de Git. Preparar um trecho, também chamado de *stage*, escolhe o que entrará no próximo commit. O commit é uma etapa separada.
+
+Para IA, `Espaço a n` abre o Codex e `Espaço a r` retoma conversas anteriores. Para GitHub, `Espaço o p` lista os PRs do repositório atual.
 
 ## Atalhos
 
