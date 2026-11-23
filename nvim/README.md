@@ -43,6 +43,7 @@ Há três formas de usar o editor:
 | `:Mason` | Mostra os servidores de linguagem e suas instalações |
 | `:enew` | Cria um buffer vazio |
 | `:TerminalBuffer` | Abre um terminal como outro buffer na janela atual |
+| `:Changes` | Abre a revisão das alterações do repositório, incluindo arquivos novos e stage |
 | `:ls` | Lista os buffers e seus números |
 | `:buffer 3` | Abre o buffer de número 3 |
 
@@ -91,6 +92,7 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Símbolos do arquivo | `Alt+7` | `Espaço c s` |
 | Terminal integrado | `Alt+F12` | `Espaço t` |
 | Git e commits | `Ctrl+K` ou `Alt+0` | `Espaço g g` |
+| Todas as alterações do Git | `:Changes` | `Espaço g v` |
 
 Use `v` para selecionar caracteres e `V` para selecionar linhas. A área de transferência depende do suporte do terminal; a colagem do próprio terminal, normalmente `Ctrl+Shift+V`, também funciona.
 
@@ -201,13 +203,15 @@ O Zed continua com Tomorrow Night selecionado até você trocar pelo seletor. Se
 
 Ao parar o cursor por meio segundo, o fim da linha mostra o autor, a data e a mensagem do último commit que alterou aquele trecho. Uma linha ainda não commitada mostra `Alteração local (sem commit)`. Essa indicação vem do histórico do Git e não identifica quem digitou uma alteração ainda sem commit. `Espaço g B`, com B maiúsculo, mostra ou oculta a indicação; `Espaço g b` abre os detalhes.
 
-1. Abra `Espaço g d` para comparar as alterações com o índice do Git. O painel lateral lista os arquivos; Enter abre a comparação.
+1. Abra `Espaço g v` (`:Changes`) para revisar o repositório. O painel lateral reúne alterações fora do stage em `Changes` e as preparadas para commit em `Staged changes`, incluindo arquivos novos, removidos e renomeados. Enter abre a comparação do arquivo.
 2. No arquivo editável, `]c` e `[c` navegam pelos trechos alterados. `Espaço g p` mostra o trecho atual.
 3. Use `Espaço g s` para colocar só esse trecho no stage. Uma seleção com `V`, seguida do mesmo atalho, prepara apenas o intervalo selecionado. `Espaço g u` desfaz o último stage de trecho.
 4. Confira `Espaço g D`, com D maiúsculo, para revisar exatamente o que está no stage.
 5. Abra `Espaço g g`. No Neogit, `Tab` expande, `s` prepara o item e `u` retira do stage. `c` seguido de `c` abre a mensagem do commit. Digite a mensagem e conclua com `Ctrl+C` duas vezes; `Ctrl+C`, depois `Ctrl+K`, cancela.
 
 No painel do Neogit, `Ctrl+S` apenas atualiza a tela. `?` mostra a ajuda. Push é uma ação separada do commit.
+
+`:Changes` usa o repositório do arquivo atual ou do diretório em que você abriu o Neovim. A lista vem do Git: salve os arquivos que deseja incluir, especialmente os novos. A revisão preserva os rascunhos abertos e não salva nem altera o stage automaticamente. Use `Espaço g q` para fechar a revisão e voltar ao editor. `Espaço g d` continua abrindo o Diffview com suas opções padrão; `Espaço g D` mostra somente o stage.
 
 Outros atalhos:
 

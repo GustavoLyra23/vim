@@ -99,6 +99,37 @@ local ok, err = xpcall(function()
   local renamed = open('renamed %.fixture')
   status(renamed, 'R ')
   color(renamed, 'GitChange')
+  lua('vim.api.nvim_set_current_buf(...); vim.api.nvim_buf_set_lines(0,0,-1,false,{"depois do stage"}); vim.cmd.write()', modified)
+  status(modified, 'MM')
+  vim.fn.writefile({'novo sem stage'}, fixture .. '/fresh.fixture')
+  lua('vim.api.nvim_buf_set_lines(0,0,-1,false,{"rascunho sem salvar"})')
+  local index_before = git('write-tree')
+  lua('vim.cmd.Changes()')
+  wait_for([[
+    local view = require('diffview.lib').get_current_view()
+    return view ~= nil and #view.files.working >= 2 and #view.files.staged >= 4
+  ]], 'Changes não listou stage e working tree')
+  lua([[
+    local view = require('diffview.lib').get_current_view()
+    local paths = {}
+    for _, kind in ipairs({'working', 'staged'}) do
+      paths[kind] = {}
+      for _, entry in ipairs(view.files[kind]) do paths[kind][entry.path] = true end
+    end
+    assert(paths.working['fresh.fixture'], 'Arquivo novo sem stage ausente')
+    assert(paths.working['mod 100%.fixture'], 'Alteração fora do stage ausente')
+    for _, name in ipairs({'mod 100%.fixture', 'new.fixture', 'deleted.fixture', 'renamed %.fixture'}) do
+      assert(paths.staged[name], 'Arquivo do stage ausente: ' .. name)
+    end
+  ]])
+  wait_for('local v=require("diffview.lib").get_current_view(); return v.cur_entry and v.cur_entry.opened == true', 'Changes não abriu o diff')
+  lua('vim.cmd.DiffviewClose()')
+  assert(git('write-tree') == index_before, 'A revisão modificou o stage')
+  assert(vim.fn.readfile(fixture .. '/mod 100%.fixture')[1] == 'depois do stage', 'A revisão salvou o rascunho')
+  assert(lua('return vim.bo[...].modified', modified), 'A revisão perdeu o rascunho')
+  lua('vim.api.nvim_buf_set_lines(...,0,-1,false,{"depois do stage"}); vim.bo[...].modified=false', modified)
+  git('add', 'mod 100%.fixture')
+  print('PASS: Changes mostra stage, working tree, novos, removidos e renomes sem salvar ou alterar o índice')
   git('commit', '-qm', 'changes fixture')
   status(modified, '  ')
   status(added, '  ')
