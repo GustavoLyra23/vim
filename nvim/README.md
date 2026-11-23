@@ -1,6 +1,6 @@
 # Neovim no dia a dia
 
-Configuração de Gustavo, preparada em 23/11/2026. Usa Tomorrow Night, com fundo `#1d1f21`, texto `#c5c8c6` e atalhos do mapa JetBrains selecionado no Zed. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
+Configuração de Gustavo, preparada em 23/11/2026. Usa as cores de sintaxe do Tomorrow Night com fundo preto `#080808`, texto `#c5c8c6` e atalhos do mapa JetBrains selecionado no Zed. O fundo é uniforme entre texto, números de linha e área vazia; os marcadores `~` ficam ocultos. A busca mantém a prévia dos arquivos, sem molduras ou linha divisória abaixo do campo de texto. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
 
 ## Começar
 
@@ -119,11 +119,13 @@ O Alacritty mantém seus atalhos atuais e captura algumas combinações, como `C
 
 ### Fonte e legibilidade
 
-O Ghostty desenha as letras do Neovim e do shell. A configuração usa Cascadia Code Medium em 14 pt, com um traço mais pesado e tamanho maior que os anteriores, Regular em 13,2 pt. Essa mudança vale para todo o terminal. O Neovim usa Tomorrow Night; as cores do shell continuam vindo do tema do Ghostty.
+O terminal desenha as letras do Neovim e do shell. No Alacritty, a fonte usa Cascadia Code Regular em 13 pt, com itálico da mesma família. O peso Regular tem traços menos finos que o Light usado antes. O fundo do Alacritty também é `#080808`, com opacidade total. Essas mudanças valem para todo o terminal.
 
-O Ghostty já usa antialiasing e hinting leve por padrão no Linux. A aparência depende também da resolução e da escala do monitor; o ajuste de peso e tamanho precisa ser avaliado na sua tela. `font-thicken` é exclusivo do macOS. Veja a [referência de fontes do Ghostty](https://ghostty.org/docs/config/reference#font-size).
+O Fontconfig desta máquina já habilita antialiasing e hinting leve, com suavização em tons de cinza. A nitidez depende também da resolução e da escala do monitor; o resultado precisa ser avaliado na sua tela. Peso e tamanho ficam na seção `[font]` de `~/dotfiles/alacritty/alacritty.toml`. Veja a [configuração de fontes do Alacritty](https://alacritty.org/config-alacritty.html#FONT).
 
-Salve o trabalho e reabra o Ghostty e o Neovim para carregar tudo. No Ghostty, `Ctrl++` aumenta a fonte, `Ctrl+-` diminui e `Ctrl+0` restaura os 14 pt configurados. Para mudar o padrão, edite `font-size` ou `font-style` em `~/dotfiles/ghostty/config.ghostty`.
+Salve o trabalho e reabra o Alacritty e o Neovim para carregar tudo. No Alacritty, `Ctrl+0` restaura os 13 pt configurados caso você tenha alterado o zoom. O backup anterior está em `~/.config/alacritty/alacritty.toml.before-neovim`.
+
+O Ghostty tem uma configuração separada em `~/dotfiles/ghostty/config.ghostty`, com Cascadia Code Medium em 14 pt. Ajustar essa fonte não muda a aparência do Alacritty.
 
 ## Git: revisar e montar commits por trecho
 
@@ -228,6 +230,8 @@ A rede desta sessão não permitiu os downloads do Mason/npm. Por isso, os 14 se
 | `~/.config/nvim` | Link para `~/dotfiles/nvim` |
 | `~/dotfiles/ghostty/config.ghostty` | Configuração do Ghostty, ligada a `~/.config/ghostty/config.ghostty` |
 | `~/.config/ghostty/config.ghostty.before-neovim` | Backup original do Ghostty |
+| `~/dotfiles/alacritty/alacritty.toml` | Fonte e cores do Alacritty, ligado a `~/.config/alacritty/alacritty.toml` |
+| `~/.config/alacritty/alacritty.toml.before-neovim` | Backup do Alacritty antes do ajuste de fonte e fundo |
 | `~/.local/share/nvim/lazy` | Plugins instalados |
 | `~/.local/share/nvim/mason` | Servidores instalados pelo Mason |
 | `~/Documentos/work/Ferramentas/Neovim.md` | Cópia deste guia no Obsidian |
@@ -236,13 +240,18 @@ A rede desta sessão não permitiu os downloads do Mason/npm. Por isso, os 14 se
 
 Para abrir temporariamente sem esta configuração, use `nvim --clean`. Para desativá-la, renomeie o link `~/.config/nvim`; os arquivos em `~/dotfiles/nvim` permanecem. Para restaurar o Ghostty, remova apenas o link de configuração e copie o backup de volta para `~/.config/ghostty/config.ghostty`.
 
+Para restaurar o Alacritty, remova apenas o link `~/.config/alacritty/alacritty.toml` e copie `alacritty.toml.before-neovim` para esse mesmo caminho.
+
 ## Verificações
 
 O teste de integração usa arquivos e commits descartáveis em `/tmp`. Ele não faz commits nos projetos, não envia prompts de IA e não publica comentários no GitHub.
 
+As verificações de aparência conferem o fundo uniforme e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
+
 ```sh
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim.lua
 ghostty +validate-config
+alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check
 ```
 

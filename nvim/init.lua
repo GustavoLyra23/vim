@@ -8,6 +8,7 @@ vim.opt.keymodel = "startsel,stopsel"
 vim.opt.selectmode = "key"
 vim.opt.selection = "exclusive"
 vim.opt.termguicolors = true
+vim.opt.fillchars:append({ eob = " " })
 vim.opt.cursorline = true
 vim.opt.signcolumn = "yes"
 vim.opt.wrap = false

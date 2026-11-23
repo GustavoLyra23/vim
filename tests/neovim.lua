@@ -31,7 +31,15 @@ local function git(...)
   return result.stdout
 end
 local ok, err = xpcall(function()
-  assert(lua('local h=vim.api.nvim_get_hl(0,{name="Normal",link=false}); return h.bg==0x1d1f21 and h.fg==0xc5c8c6'), "Tomorrow Night não foi aplicado")
+  assert(lua([[
+    local normal = vim.api.nvim_get_hl(0, {name='Normal', link=false})
+    assert(normal.bg == 0x080808 and normal.fg == 0xc5c8c6)
+    for _, group in ipairs({'LineNr', 'SignColumn', 'CursorLine', 'NormalFloat', 'EndOfBuffer'}) do
+      local hl = vim.api.nvim_get_hl(0, {name=group, link=false})
+      assert((hl.bg or normal.bg) == normal.bg, group .. ' tem um fundo diferente')
+    end
+    return vim.opt.fillchars:get().eob == ' '
+  ]]), "O fundo preto uniforme não foi aplicado")
   git("init", "-q")
   git("config", "user.name", "Neovim Test")
   git("config", "user.email", "neovim-test@example.invalid")
@@ -119,6 +127,27 @@ local ok, err = xpcall(function()
   lua('vim.api.nvim_buf_delete(..., {force=true})', new_buffer)
   lua('vim.api.nvim_buf_delete(..., {force=true})', selection_buffer)
   print("PASS: criar, listar e abrir buffers preserva os rascunhos")
+
+  for _, preset in ipairs({'vertical', 'default'}) do
+    lua('Snacks.picker.buffers({layout={preset=...}})', preset)
+    wait_for('local p=Snacks.picker.get({source="buffers"})[1]; return p and p.input.win:valid() and p.preview.win:valid()', "Busca não abriu com prévia")
+    local picker_windows = lua([[
+      local picker = Snacks.picker.get({source='buffers'})[1]
+      local windows = vim.list_extend(vim.tbl_values(picker.layout.wins), vim.tbl_values(picker.layout.box_wins))
+      local ids = {}
+      for _, window in ipairs(windows) do
+        if window:valid() then
+          table.insert(ids, window.win)
+          local border = vim.api.nvim_win_get_config(window.win).border
+          assert(not border or border == 'none' or #border == 0, 'A busca ainda tem uma borda: ' .. vim.inspect(border))
+        end
+      end
+      picker:close()
+      return ids
+    ]])
+    wait_for('return vim.fn.mode() == "n" and vim.iter(' .. vim.inspect(picker_windows) .. '):all(function(win) return not vim.api.nvim_win_is_valid(win) end)', "A busca não fechou")
+  end
+  print("PASS: fundo uniforme e busca sem bordas em janelas estreitas e largas")
 
   vim.fn.writefile({ '{"name":"nvim-check","private":true}' }, fixture .. "/package.json")
   vim.fn.writefile({ '{"compilerOptions":{"strict":true}}' }, fixture .. "/tsconfig.json")
