@@ -8,6 +8,7 @@ vim.opt.keymodel = "startsel,stopsel"
 vim.opt.selectmode = "key"
 vim.opt.selection = "exclusive"
 vim.opt.termguicolors = true
+vim.opt.winborder = "none"
 vim.opt.fillchars:append({ eob = "~" })
 vim.opt.cursorline = true
 vim.opt.signcolumn = "yes"
@@ -28,10 +29,23 @@ vim.opt.completeopt = { "menu", "menuone", "noselect" }
 vim.opt.diffopt:append({ "algorithm:histogram", "linematch:60" })
 vim.opt.shell = "zsh"
 
+-- Alguns plugins definem bordas próprias, ignorando winborder.
+vim.api.nvim_create_autocmd({ "WinNew", "WinEnter", "WinResized" }, {
+  group = vim.api.nvim_create_augroup("BorderlessWindows", { clear = true }),
+  callback = vim.schedule_wrap(function()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      local config = vim.api.nvim_win_get_config(win)
+      if config.relative ~= "" and config.border and config.border ~= "none" then
+        vim.api.nvim_win_set_config(win, { border = "none" })
+      end
+    end
+  end),
+})
+
 vim.diagnostic.config({
   severity_sort = true,
   virtual_text = false,
-  float = { border = "rounded", source = true },
+  float = { border = "none", source = true },
   signs = { text = { [1] = "E", [2] = "W", [3] = "I", [4] = "H" } },
 })
 

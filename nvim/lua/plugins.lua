@@ -21,8 +21,18 @@ return {
     priority = 1000,
     lazy = false,
     opts = {
-      input = { enabled = true },
-      notifier = { enabled = true },
+      styles = {
+        input = { border = "none" },
+        notification = { border = "none" },
+        notification_history = {
+          border = "none",
+          keys = { ["<Esc>"] = "close" },
+          wo = { winbar = " Histórico de notificações | Esc/q: fechar " },
+        },
+        help = { border = "none" },
+      },
+      input = { enabled = true, prompt_pos = "left" },
+      notifier = { enabled = true, style = "minimal" },
       picker = {
         enabled = true,
         layout = {

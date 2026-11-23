@@ -42,6 +42,9 @@ Há três formas de usar o editor:
 | `:NeovimGuia` | Abre este guia |
 | `:Mason` | Mostra os servidores de linguagem e suas instalações |
 | `:enew` | Cria um buffer vazio |
+| `:vsplit arquivo` | Abre um arquivo em um painel à direita |
+| `:vnew` | Abre um buffer vazio em um painel à direita |
+| `:close` | Fecha o painel atual; mantém a última janela do editor aberta |
 | `:TerminalBuffer` | Abre um terminal como outro buffer na janela atual |
 | `:Changes` | Abre a revisão das alterações do repositório, incluindo arquivos novos e stage |
 | `:ls` | Lista os buffers e seus números |
@@ -81,6 +84,8 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Comentar linha ou seleção | `Ctrl+/` | `gcc` na linha; `gc` na seleção |
 | Próximo arquivo / anterior | `Ctrl+Tab` / `Ctrl+Shift+Tab` | `Espaço b n` / `Espaço b p` |
 | Fechar arquivo | | `Espaço b d` |
+| Dividir à direita | `Ctrl+W`, depois `v` | `Espaço b v` |
+| Fechar painel | `:close` | `Espaço x` |
 | Definição | `Ctrl+B` | `Espaço c d` |
 | Referências | `Alt+F7` | `Espaço c i` |
 | Renomear símbolo | `Shift+F6` | `Espaço c r` |
@@ -117,6 +122,32 @@ Os nomes também acompanham o estado no Git: verde para novos, amarelo para modi
 - `Espaço b d` fecha o buffer atual e pergunta o que fazer se houver alterações sem salvar.
 
 `Espaço b t` ou `:TerminalBuffer` cria um terminal na janela atual e já permite digitar comandos. Ele aparece na barra superior e na lista `Espaço b b`. Cada execução abre um shell novo no diretório atual do Neovim, preservando os outros buffers. Para trocar de buffer, pressione `Ctrl+\`, depois `Ctrl+N`, e use `Ctrl+Tab` ou `Espaço b b`. Ao voltar ao terminal, pressione `i` para digitar. Trocar de buffer mantém o processo; `exit` encerra o shell. O comando nativo equivalente é `:enew | terminal`.
+
+### Arquivos lado a lado
+
+Pressione Esc e depois `Espaço b v`. Isso abre outra janela à direita com o buffer atual. Nela, use `Espaço b b` para escolher um buffer já aberto, `Ctrl+E` para abrir outro arquivo ou `Ctrl+N` para criar um rascunho vazio. Os dois painéis continuam abertos.
+
+Os comandos nativos são `:vsplit` para dividir com o mesmo buffer, `:vsplit caminho/do/arquivo` para abrir outro arquivo à direita e `:vnew` para criar um buffer vazio à direita. Pressione Enter depois do comando. Para mudar o foco, use `Ctrl+W`, solte e aperte a seta na direção do painel desejado.
+
+### Fechar uma tela ou voltar ao código
+
+Um buffer é o conteúdo; uma janela ou painel é o espaço que mostra esse conteúdo. Fechar um painel pode deixar o buffer aberto na barra superior.
+
+| Onde você está | Como sair |
+| --- | --- |
+| Histórico de notificações da tecla `Espaço n` | `Esc` ou `q` |
+| Busca de arquivos, buffers ou temas | `Esc`; se ficar em navegação, pressione Esc novamente |
+| Campo de entrada, como renomear um símbolo | `Esc` para sair da digitação, depois `Esc` para cancelar |
+| Editando código ou com autocomplete aberto | `Esc` volta à navegação; repita se a primeira tecla só fechar o menu |
+| Painel ou popup com foco | Em modo normal, `Espaço x` fecha o painel atual |
+| Arquivo ou rascunho na barra superior | `Espaço b d` fecha o buffer e pergunta sobre alterações sem salvar |
+| Revisão de changes | `Espaço g q` fecha a revisão inteira |
+| Terminal ou conversa do Codex | `Ctrl+\`, depois `Ctrl+N`, sai da digitação; `Ctrl+W` e uma seta muda o foco |
+| Neovim inteiro | `Esc`, depois `Espaço q`; há confirmação para alterações sem salvar |
+
+`Espaço x` executa `:confirm close`. Ele mantém os rascunhos em memória e não força o descarte de alterações. Na última janela, o Neovim avisa que não pode fechá-la: use `Espaço b d` para fechar apenas o buffer ou `Espaço q` para sair do editor. Evite `:q!` quando quiser preservar alterações; esse comando força a saída sem salvar.
+
+As janelas flutuantes ficam sem moldura, incluindo histórico, campos de entrada, diagnósticos e popups que definem borda própria. O histórico mostra no cabeçalho as teclas para fechar, e os campos mantêm o nome da ação ao lado da entrada. Reinicie o Neovim para carregar os ajustes.
 
 ### Código, terminal e conversa ao mesmo tempo
 
@@ -330,6 +361,8 @@ O teste de integração usa arquivos e commits descartáveis em `/tmp`. Ele não
 
 Os testes específicos do terminal e da interface Git conferem a preservação de rascunhos, o shell em execução, as cores antes e depois do stage/commit, renomes, remoções, conflitos e autoria da linha. Na validação desses ajustes, a suíte geral parou no teste de copiar com Ctrl+C em modo headless; o mesmo resultado ocorreu com a configuração anterior. A verificação passou a exigir um resultado booleano verdadeiro, evitando que uma resposta nula do processo fosse tratada como sucesso. O comportamento físico de Ctrl+C no Alacritty não foi conferido nessa investigação.
 
+O teste de janelas verifica o histórico sem borda e seu fechamento por Esc, q e Espaço x, bordas explícitas de plugins, diagnósticos, campos de entrada com rótulo visível, popup local do Octo e buscas nos temas claro e escuro. Também confere a divisão vertical e o fechamento de um painel com dois rascunhos preservados.
+
 As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
 
 O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed.dev/schema/themes/v0.2.0.json), e as cores principais do Tomorrow Night foram comparadas com a extensão instalada. A aparência do tema novo na janela do Zed não foi conferida. Na verificação desta mudança, a suíte geral passou na segunda execução: a primeira parou ao esperar a saída do modo de edição depois de fechar o autocomplete com Esc. O teste específico de temas passou.
@@ -339,6 +372,7 @@ nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-themes.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-terminal.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-git-ui.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-windows.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check
