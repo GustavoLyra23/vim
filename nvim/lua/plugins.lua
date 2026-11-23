@@ -13,6 +13,21 @@ return {
       require("mini.icons").mock_nvim_web_devicons()
       require("mini.statusline").setup({ use_icons = false })
       require("mini.tabline").setup({ show_icons = false })
+      local function tabline_colors()
+        local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+        for _, state in ipairs({ "Current", "Visible", "Hidden", "ModifiedCurrent", "ModifiedVisible", "ModifiedHidden", "Fill", "Tabpagesection", "Trunc" }) do
+          vim.api.nvim_set_hl(0, "MiniTabline" .. state, {
+            fg = normal.fg, bg = normal.bg,
+            bold = state:find("Current") ~= nil,
+            underline = state:find("Modified") ~= nil,
+          })
+        end
+      end
+      vim.api.nvim_create_autocmd("ColorScheme", {
+        group = vim.api.nvim_create_augroup("UniformTabline", { clear = true }),
+        callback = tabline_colors,
+      })
+      tabline_colors()
       require("mini.pairs").setup()
     end,
   },

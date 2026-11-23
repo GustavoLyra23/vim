@@ -102,13 +102,48 @@ Essa seleção entra no modo Select: digitar substitui o trecho selecionado. `Ct
 
 Um buffer é o conteúdo aberto na memória do editor. Pode ser um arquivo existente ou um rascunho ainda sem nome. A barra superior mostra esses buffers.
 
+A barra usa o mesmo fundo do editor em qualquer tema. O arquivo ativo aparece em negrito; arquivos com alterações sem salvar têm o nome sublinhado.
+
 - `Ctrl+N` cria um buffer vazio e já entra no modo de escrita. `Espaço b a` faz o mesmo no modo normal.
 - `Esc`, depois `Espaço b b`, abre a lista. Digite parte do nome, escolha com as setas e pressione Enter. Buffers sem nome aparecem como `[Scratch]`.
 - `Ctrl+Tab` avança e `Ctrl+Shift+Tab` volta entre os buffers. Trocar de buffer mantém as alterações na memória; ainda é preciso salvá-las no disco.
 - Para dar um nome ao rascunho, pressione Esc e use `:w caminho/do/arquivo`, seguido de Enter. Depois, `Ctrl+S` salva normalmente.
 - `Espaço b d` fecha o buffer atual e pergunta o que fazer se houver alterações sem salvar.
 
-No terminal integrado, `Ctrl+\` seguido de `Ctrl+N` volta à navegação. Dois Esc rápidos também funcionam. Pressione `i` para voltar ao terminal.
+### Código, terminal e conversa ao mesmo tempo
+
+Abra o arquivo e pressione Esc antes das sequências com Espaço:
+
+1. `Espaço a r` abre o seletor de conversas do Codex à direita. Escolha uma conversa para retomá-la. `Espaço a n` abre o painel de uma conversa nova ou mostra a que já está em execução nesse painel.
+2. No painel do Codex, pressione `Ctrl+\`, depois `Ctrl+N`, para sair da digitação no terminal. Isso mantém a conversa aberta.
+3. Pressione `Ctrl+W`, solte e aperte `←` para voltar ao código.
+4. No código, `Espaço t` abre um terminal de comandos embaixo. O painel de conversa permanece aberto.
+
+Para trocar o foco, saia da digitação com `Ctrl+\`, depois `Ctrl+N`, se estiver em um terminal; use Esc se estiver editando código. Depois use:
+
+| Teclas em sequência | Destino |
+| --- | --- |
+| `Ctrl+W`, `←` ou `h` | Painel à esquerda |
+| `Ctrl+W`, `→` ou `l` | Painel à direita |
+| `Ctrl+W`, `↑` ou `k` | Painel acima |
+| `Ctrl+W`, `↓` ou `j` | Painel abaixo |
+| `Ctrl+W`, `w` | Próximo painel |
+
+Ao chegar ao código, `i` começa a editar. Os terminais do painel normalmente retomam a digitação ao ganhar foco; pressione `i` se ainda estiver em navegação. Dois Esc em menos de 200 ms também saem da digitação nos terminais do Snacks. `Alt+F12` abre ou oculta o terminal de comandos; ocultar mantém o processo em execução.
+
+Se quiser um terminal comum à direita do código, abra a linha de comandos com `:` e execute:
+
+```vim
+:botright vnew | terminal
+```
+
+Esse comando cria um terminal novo a cada execução. Para encerrá-lo, digite `exit` no shell. As conversas ficam nos painéis do Codex; a lista de conversas anteriores é aberta por `Espaço a r`, e não fica como uma lista lateral permanente do Zed.
+
+### Usar o autocomplete de linguagem
+
+Abra ou salve o arquivo com sua extensão, como `.c`, `.go`, `.ts` ou `.py`, dentro do projeto. Pressione `i` e comece a escrever. O menu sugere funções, variáveis, palavras do arquivo e caminhos. `Ctrl+Espaço` solicita sugestões; Tab ou as setas escolhem uma opção, e Enter aceita. Sem opção selecionada, Enter insere uma linha.
+
+Se o menu não aparecer, `:set filetype?` mostra a linguagem detectada, `:checkhealth vim.lsp` mostra os servidores conectados e `:Mason` mostra as instalações. Um rascunho sem nome pode não ter linguagem definida. O autocomplete de linguagem funciona no buffer de código; o terminal tem a conclusão de comandos do zsh.
 
 ### Ghostty e Alacritty
 
@@ -216,7 +251,7 @@ Há 27 configurações de servidores de linguagem, além da conexão com o Godot
 
 Na primeira abertura interativa, o Mason tenta baixar os servidores ausentes. Nix e Haskell só entram nessa instalação automática quando Cargo e `ghcup`, respectivamente, estão disponíveis. Abra `Espaço c m` (`:Mason`) para acompanhar. `Espaço c l` mostra os clientes e configurações do LSP. A formatação usa os servidores conectados e depende de cada linguagem e projeto.
 
-| Linguagens | Servidores | Situação na preparação |
+| Linguagens | Servidores | Situação verificada |
 | --- | --- | --- |
 | JavaScript, JSX, TypeScript, TSX | vtsls, ESLint | Executáveis disponíveis; autocomplete TypeScript testado |
 | Python | basedpyright, Ruff | Executáveis disponíveis; autocomplete Python testado |
@@ -226,25 +261,25 @@ Na primeira abertura interativa, o Mason tenta baixar os servidores ausentes. Ni
 | Bash, shell, `.env` | bashls | Executável do Zed disponível; zsh tem diferenças de sintaxe |
 | C, C++, Objective-C | clangd | Executável disponível no sistema |
 | Dockerfile e Docker Compose | docker_language_server | Executável do Zed disponível |
-| Go | gopls | Aguarda instalação pelo Mason; Go está instalado |
-| Rust | rust_analyzer | Aguarda download; projetos precisam do toolchain Rust |
-| Lua e anotações Lua | lua_ls | Aguarda download |
-| Java | jdtls | Aguarda download; Java está instalado |
-| Gradle e Gradle Kotlin | gradle_ls | Aguarda download; suporte ao arquivo de build, não a todo projeto Kotlin |
-| CMake | neocmake | Aguarda download |
-| Terraform e variáveis Terraform | terraformls | Aguarda download |
-| TOML | taplo | Aguarda download |
-| Markdown e `.txt` | marksman | Aguarda download; completa palavras e caminhos enquanto isso |
-| SQL | sqlls | Aguarda instalação; schemas dependem da conexão configurada no projeto |
-| Zig | zls | Aguarda download; depende da versão do Zig do projeto |
+| Go | gopls | Executável disponível; Go está instalado |
+| Rust | rust_analyzer | Executável disponível; projetos precisam do toolchain Rust |
+| Lua e anotações Lua | lua_ls | Executável disponível |
+| Java | jdtls | Executável disponível; Java está instalado |
+| Gradle e Gradle Kotlin | gradle_ls | Executável disponível; atende arquivos de build |
+| CMake | neocmake | Executável disponível |
+| Terraform e variáveis Terraform | terraformls | Executável disponível |
+| TOML | taplo | Executável disponível |
+| Markdown e `.txt` | marksman | Executável disponível |
+| SQL | sqlls | Executável disponível; schemas dependem da conexão configurada no projeto |
+| Zig | zls | Executável disponível; depende da versão do Zig do projeto |
 | Nix | nil_ls | Mason precisa de Cargo, ausente na preparação; também aceita `nil` já instalado |
-| Odin | ols | Aguarda download; biblioteca padrão depende da instalação do Odin |
+| Odin | ols | Executável disponível; biblioteca padrão depende da instalação do Odin |
 | Haskell, Literate Haskell e Cabal | hls | Mason precisa de `ghcup`, ausente; GHC/HLS devem ser compatíveis |
 | GDScript | servidor do Godot | Requer o projeto aberto no Godot, em `127.0.0.1:6005` |
 
 Alex, GDShader, arquivos de recursos do Godot, properties e arquivos Git têm sugestões de palavras/caminhos; esta configuração não atribui a eles um servidor semântico específico. O destaque de sintaxe usa o runtime do Neovim e os tokens fornecidos pelos LSPs, quando disponíveis.
 
-A rede desta sessão não permitiu os downloads do Mason/npm. Por isso, os 14 servidores marcados como pendentes não foram instalados nem validados. Também não foi possível confirmar a autenticação do `gh`; o resultado precisa ser conferido no terminal normal antes do uso online.
+Na preparação inicial, a rede impediu parte dos downloads. Na conferência posterior, só `hls` e `nil_ls` continuavam sem executáveis disponíveis. A presença do executável não confirma o funcionamento em todos os projetos; confira o servidor conectado com `:checkhealth vim.lsp`. A autenticação do `gh` ainda precisa ser conferida no terminal normal antes do uso online.
 
 ## Arquivos e manutenção
 

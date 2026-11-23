@@ -16,6 +16,18 @@ local function wait_for(code, message)
 end
 local ok, err = xpcall(function()
   assert(lua('return vim.g.colors_name') == "tomorrow-zed")
+  lua([[
+    function _G.check_tabline()
+      local normal = vim.api.nvim_get_hl(0, {name='Normal', link=false})
+      for _, group in ipairs(vim.fn.getcompletion('MiniTabline', 'highlight')) do
+        local hl = vim.api.nvim_get_hl(0, {name=group, link=false})
+        assert(hl.bg == normal.bg and hl.fg == normal.fg, group .. ' tem cores diferentes do editor')
+      end
+      assert(vim.api.nvim_get_hl(0, {name='MiniTablineCurrent'}).bold, 'Buffer ativo sem indicação')
+      assert(vim.api.nvim_get_hl(0, {name='MiniTablineModifiedHidden'}).underline, 'Buffer modificado sem indicação')
+    end
+    check_tabline()
+  ]])
   local count = lua([[
     local schemes = vim.fn.globpath(vim.fn.stdpath('data') .. '/lazy/tinted-nvim', 'colors/*.vim', false, true)
     assert(#schemes >= 200, 'Coleção de temas incompleta')
@@ -24,6 +36,7 @@ local ok, err = xpcall(function()
       vim.cmd.colorscheme(name)
       local normal = vim.api.nvim_get_hl(0, {name='Normal', link=false})
       assert(normal.fg and normal.bg, name .. ' não definiu as cores do editor')
+      check_tabline()
     end
     vim.cmd.colorscheme('tomorrow-zed')
     return #schemes
@@ -51,6 +64,7 @@ local ok, err = xpcall(function()
       assert((hl.bg or normal.bg) == normal.bg, group)
     end
     assert(vim.opt.fillchars:get().eob == '~')
+    check_tabline()
     vim.cmd.colorscheme('tomorrow-zed')
   ]], pastel)
   print('PASS: Pastel Branco tem a mesma paleta nos dois editores e fundo uniforme')
@@ -75,7 +89,7 @@ local ok, err = xpcall(function()
   end
   lua('vim.cmd.colorscheme("tomorrow-zed")')
   assert(lua('return vim.v.errmsg') == '', lua('return vim.v.errmsg'))
-  print('PASS: prévia em C, Esc restaura o tema e Enter aplica a escolha')
+  print('PASS: prévia em C, Esc restaura o tema, Enter aplica e a barra mantém o fundo uniforme')
 end, debug.traceback)
 pcall(vim.rpcnotify, channel, 'nvim_command', 'qa!')
 vim.fn.jobwait({channel}, 3000)
