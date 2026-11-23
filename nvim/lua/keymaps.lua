@@ -14,6 +14,14 @@ vim.api.nvim_create_user_command("NeovimGuia", function()
   vim.cmd.edit(vim.fn.stdpath("config") .. "/README.md")
 end, {})
 
+vim.api.nvim_create_user_command("Temas", function()
+  Snacks.picker.colorschemes({
+    transform = function(item)
+      item.file = vim.fn.stdpath("config") .. "/examples/theme-preview.c"
+    end,
+  })
+end, { desc = "Temas com previa de codigo" })
+
 bind("<C-s>", "<Cmd>write<CR>", "Salvar", editor_modes)
 bind("<C-z>", "<Cmd>undo<CR>", "Desfazer", editor_modes)
 bind("<C-S-z>", "<Cmd>redo<CR>", "Refazer", editor_modes)
@@ -61,6 +69,7 @@ bind("<leader><leader>", function() Snacks.picker.keymaps() end, "Todos os atalh
 bind("<leader>ff", function() Snacks.picker.files() end, "Abrir arquivo")
 bind("<leader>fg", function() Snacks.picker.grep() end, "Buscar no projeto")
 bind("<leader>fr", function() Snacks.picker.recent() end, "Arquivos recentes")
+bind("<leader>ft", "<Cmd>Temas<CR>", "Temas com previa")
 bind("<leader>e", function() Snacks.explorer() end, "Explorador")
 bind("<leader>w", "<Cmd>write<CR>", "Salvar")
 bind("<leader>q", "<Cmd>confirm qall<CR>", "Sair")

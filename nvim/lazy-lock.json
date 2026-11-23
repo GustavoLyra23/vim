@@ -11,5 +11,6 @@
   "octo.nvim": { "branch": "master", "commit": "0ddca04c02aab8ba18d2072f9b855f3806adad54" },
   "plenary.nvim": { "branch": "master", "commit": "74b06c6c75e4eeb3108ec01852001636d85a932b" },
   "snacks.nvim": { "branch": "main", "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2" },
+  "tinted-nvim": { "branch": "main", "commit": "42ccfb9b1a88a5c0419231f0c9e0067379f28f34" },
   "which-key.nvim": { "branch": "main", "commit": "3aab2147e74890957785941f0c1ad87d0a44c15a" }
 }

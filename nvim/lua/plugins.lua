@@ -1,14 +1,14 @@
 return {
   {
+    "tinted-theming/tinted-nvim",
+    lazy = false,
+    priority = 1000,
+    opts = { apply_scheme_on_startup = false },
+  },
+  {
     "nvim-mini/mini.nvim",
     config = function()
-      -- Tomorrow Night com fundo preto uniforme.
-      require("mini.base16").setup({ palette = {
-        base00 = "#080808", base01 = "#080808", base02 = "#242424", base03 = "#969896",
-        base04 = "#b4b7b4", base05 = "#c5c8c6", base06 = "#e0e0e0", base07 = "#ffffff",
-        base08 = "#cc6666", base09 = "#de935f", base0A = "#f0c674", base0B = "#b5bd68",
-        base0C = "#8abeb7", base0D = "#81a2be", base0E = "#b294bb", base0F = "#a3685a",
-      } })
+      vim.cmd.colorscheme("tomorrow-zed")
       require("mini.icons").setup({ style = "ascii" })
       require("mini.icons").mock_nvim_web_devicons()
       require("mini.statusline").setup({ use_icons = false })

@@ -1,6 +1,6 @@
 # Neovim no dia a dia
 
-Configuração de Gustavo, preparada em 23/11/2026. Usa as cores de sintaxe do Tomorrow Night com fundo preto `#080808`, texto `#c5c8c6` e atalhos do mapa JetBrains selecionado no Zed. O fundo é uniforme entre texto, números de linha e área vazia; os marcadores `~` ficam ocultos. A busca mantém a prévia dos arquivos, sem molduras ou linha divisória abaixo do campo de texto. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
+Configuração de Gustavo, preparada em 23/11/2026. O tema padrão é Tomorrow Night, com a paleta da extensão instalada no Zed: fundo `#1e1f21` e texto `#c5c8c6`. O fundo é uniforme entre texto, números de linha e área vazia; os marcadores `~` ficam visíveis. A busca mantém a prévia dos arquivos, sem molduras ou linha divisória abaixo do campo de texto. Os atalhos seguem o mapa JetBrains selecionado no Zed. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
 
 ## Começar
 
@@ -65,6 +65,7 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Paleta de comandos | `Ctrl+Shift+A` | `:` seguido do comando e Tab |
 | Explorar arquivos | `Alt+1` | `Espaço e` |
 | Arquivos recentes | | `Espaço f r` |
+| Temas com prévia | `:Temas` | `Espaço f t` |
 | Salvar | `Ctrl+S` | `Espaço w` |
 | Desfazer / refazer | `Ctrl+Z` / `Ctrl+Shift+Z` | `u` / `Ctrl+R` em navegação |
 | Selecionar tudo | `Ctrl+A` | `ggVG` |
@@ -126,6 +127,34 @@ O Fontconfig desta máquina já habilita antialiasing e hinting leve, com suaviz
 Salve o trabalho e reabra o Alacritty e o Neovim para carregar tudo. No Alacritty, `Ctrl+0` restaura os 13 pt configurados caso você tenha alterado o zoom. O backup anterior está em `~/.config/alacritty/alacritty.toml.before-neovim`.
 
 O Ghostty tem uma configuração separada em `~/dotfiles/ghostty/config.ghostty`, com Cascadia Code Medium em 14 pt. Ajustar essa fonte não muda a aparência do Alacritty.
+
+## Temas e prévia
+
+Para experimentar, pressione Esc e digite `:Temas`, seguido de Enter. O atalho `Espaço f t` abre o mesmo seletor. Digite parte do nome e use as setas para escolher: a prévia aplica as cores ao editor e mostra uma amostra de código C. Enter confirma; dois Esc cancelam e restauram o tema anterior.
+
+A coleção [tinted-nvim](https://github.com/tinted-theming/tinted-nvim) está instalada com 642 temas, além dos dois temas locais. Inclui opções claras e escuras; nem todas são minimalistas. Estes são alguns nomes para começar:
+
+| Preferência | Nomes para digitar no seletor |
+| --- | --- |
+| Branco pastel da imagem | `pastel-branco` |
+| Claros suaves | `base16-catppuccin-latte`, `base16-rose-pine-dawn`, `base16-atelier-cave-light` |
+| Claros com poucas cores | `base16-grayscale-light`, `base16-zenbones` |
+| Escuros com poucas cores | `base16-grayscale-dark`, `base16-ashes` |
+| Escuros pastel | `base16-rose-pine-moon`, `base16-catppuccin-mocha`, `base16-nord` |
+| Tomorrow Night do Zed | `tomorrow-zed` |
+
+Para trocar diretamente:
+
+```vim
+:colorscheme pastel-branco
+:colorscheme tomorrow-zed
+```
+
+A escolha vale para a sessão atual. Ao reabrir o Neovim, ele volta a Tomorrow Night. Para mudar o padrão, edite `~/dotfiles/nvim/lua/plugins.lua` e troque o nome em `vim.cmd.colorscheme("tomorrow-zed")` pelo tema escolhido.
+
+O Pastel Branco usa fundo `#fdfcf9`, texto escuro, comentários verdes, palavras-chave lilás, números roxos e macros marrons. Ele está instalado também no Zed. Abra a paleta de comandos com `Ctrl+Shift+A`, procure `theme selector: toggle`, escolha **Pastel Branco** e pressione Enter. Se o nome ainda não aparecer, reabra o Zed. A escolha pelo seletor do Zed é salva nas configurações, conforme a [documentação de temas](https://zed.dev/docs/themes).
+
+O Zed continua com Tomorrow Night selecionado até você trocar pelo seletor. Seus outros temas locais foram preservados. Os dois editores compartilham a paleta do Pastel Branco, mas podem classificar um mesmo trecho de código de formas diferentes. O tema Tomorrow Night do Neovim usa as cores da [extensão Tomorrow do Zed](https://github.com/biaqat/tomorrow-theme-zed), versão 1.2.1 instalada nesta máquina.
 
 ## Git: revisar e montar commits por trecho
 
@@ -226,6 +255,10 @@ A rede desta sessão não permitiu os downloads do Mason/npm. Por isso, os 14 se
 | `~/dotfiles/nvim/lua/plugins.lua` | Interface, autocomplete, Git e GitHub |
 | `~/dotfiles/nvim/lua/languages.lua` | Servidores de linguagem |
 | `~/dotfiles/nvim/lua/keymaps.lua` | Atalhos e painéis do Codex |
+| `~/dotfiles/nvim/colors/tomorrow-zed.lua` | Tomorrow Night baseado na paleta do Zed |
+| `~/dotfiles/nvim/colors/pastel-branco.lua` | Tema claro personalizado do Neovim |
+| `~/dotfiles/nvim/examples/theme-preview.c` | Código exibido na prévia de temas |
+| `~/dotfiles/zed/themes/pastel-branco.json` | Tema claro do Zed, ligado a `~/.config/zed/themes/pastel-branco.json` |
 | `~/dotfiles/nvim/lazy-lock.json` | Versões dos plugins |
 | `~/.config/nvim` | Link para `~/dotfiles/nvim` |
 | `~/dotfiles/ghostty/config.ghostty` | Configuração do Ghostty, ligada a `~/.config/ghostty/config.ghostty` |
@@ -246,10 +279,13 @@ Para restaurar o Alacritty, remova apenas o link `~/.config/alacritty/alacritty.
 
 O teste de integração usa arquivos e commits descartáveis em `/tmp`. Ele não faz commits nos projetos, não envia prompts de IA e não publica comentários no GitHub.
 
-As verificações de aparência conferem o fundo uniforme e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
+As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
+
+O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed.dev/schema/themes/v0.2.0.json), e as cores principais do Tomorrow Night foram comparadas com a extensão instalada. A aparência do tema novo na janela do Zed não foi conferida. Na verificação desta mudança, a suíte geral passou na segunda execução: a primeira parou ao esperar a saída do modo de edição depois de fechar o autocomplete com Esc. O teste específico de temas passou.
 
 ```sh
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-themes.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check
