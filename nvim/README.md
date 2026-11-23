@@ -42,6 +42,7 @@ Há três formas de usar o editor:
 | `:NeovimGuia` | Abre este guia |
 | `:Mason` | Mostra os servidores de linguagem e suas instalações |
 | `:enew` | Cria um buffer vazio |
+| `:TerminalBuffer` | Abre um terminal como outro buffer na janela atual |
 | `:ls` | Lista os buffers e seus números |
 | `:buffer 3` | Abre o buffer de número 3 |
 
@@ -59,6 +60,7 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | --- | --- | --- |
 | Abrir arquivo | `Ctrl+E` ou `Ctrl+Shift+N` | `Espaço f f` |
 | Novo buffer | `Ctrl+N` | `Espaço b a` |
+| Terminal como buffer | `:TerminalBuffer` | `Espaço b t` |
 | Escolher buffer aberto | | `Espaço b b` |
 | Buscar no arquivo | `Ctrl+F` | `/texto` e Enter |
 | Buscar no projeto | `Ctrl+Shift+F` | `Espaço f g` |
@@ -109,6 +111,8 @@ A barra usa o mesmo fundo do editor em qualquer tema. O arquivo ativo aparece em
 - `Ctrl+Tab` avança e `Ctrl+Shift+Tab` volta entre os buffers. Trocar de buffer mantém as alterações na memória; ainda é preciso salvá-las no disco.
 - Para dar um nome ao rascunho, pressione Esc e use `:w caminho/do/arquivo`, seguido de Enter. Depois, `Ctrl+S` salva normalmente.
 - `Espaço b d` fecha o buffer atual e pergunta o que fazer se houver alterações sem salvar.
+
+`Espaço b t` ou `:TerminalBuffer` cria um terminal na janela atual e já permite digitar comandos. Ele aparece na barra superior e na lista `Espaço b b`. Cada execução abre um shell novo no diretório atual do Neovim, preservando os outros buffers. Para trocar de buffer, pressione `Ctrl+\`, depois `Ctrl+N`, e use `Ctrl+Tab` ou `Espaço b b`. Ao voltar ao terminal, pressione `i` para digitar. Trocar de buffer mantém o processo; `exit` encerra o shell. O comando nativo equivalente é `:enew | terminal`.
 
 ### Código, terminal e conversa ao mesmo tempo
 
@@ -321,6 +325,7 @@ O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed
 ```sh
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-themes.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-terminal.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check
