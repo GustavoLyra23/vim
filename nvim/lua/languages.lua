@@ -14,9 +14,12 @@ end
 vim.lsp.config("*", { capabilities = require("blink.cmp").get_lsp_capabilities() })
 local servers = {
   bashls = {},
-  basedpyright = {},
+  basedpyright = { settings = { basedpyright = { analysis = { autoImportCompletions = true } } } },
   ruff = {},
-  vtsls = {},
+  vtsls = { settings = {
+    typescript = { suggest = { autoImports = true } },
+    javascript = { suggest = { autoImports = true } },
+  } },
   eslint = {},
   html = {},
   cssls = {},
@@ -25,7 +28,7 @@ local servers = {
   tailwindcss = {},
   emmet_language_server = {},
   lua_ls = { settings = { Lua = { diagnostics = { globals = { "vim" } } } } },
-  gopls = {},
+  gopls = { settings = { gopls = { completeUnimported = true } } },
   rust_analyzer = {},
   clangd = {},
   jdtls = {},
@@ -77,5 +80,6 @@ require("mason-lspconfig").setup({ ensure_installed = installable })
 
 -- O servidor de GDScript pertence ao editor Godot aberto com o projeto.
 vim.lsp.enable("gdscript")
+require("imports")
 
 return { servers = servers, missing = missing }

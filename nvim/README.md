@@ -47,6 +47,7 @@ Há três formas de usar o editor:
 | `:close` | Fecha o painel atual; mantém a última janela do editor aberta |
 | `:TerminalBuffer` | Abre um terminal como outro buffer na janela atual |
 | `:Changes` | Abre a revisão das alterações do repositório, incluindo arquivos novos e stage |
+| `:OrganizarImports` | Adiciona e limpa imports nas linguagens configuradas |
 | `:ls` | Lista os buffers e seus números |
 | `:buffer 3` | Abre o buffer de número 3 |
 
@@ -57,6 +58,8 @@ No trabalho, comece com `Ctrl+E` para escolher um arquivo, `i` para editar e `Ct
 Para IA, `Espaço a n` abre o Codex e `Espaço a r` retoma conversas anteriores. Para GitHub, `Espaço o p` lista os PRs do repositório atual.
 
 ## Atalhos
+
+Os atalhos seguem o [mapa JetBrains ativo no Zed](https://github.com/zed-industries/zed/blob/main/assets/keymaps/linux/jetbrains.json). `Ctrl+N` continua criando um buffer, como configurado aqui, e `Ctrl+W` continua sendo o prefixo de navegação entre painéis do Neovim.
 
 Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em modo de navegação. Por exemplo, `Espaço f f` abre a busca de arquivos.
 
@@ -85,17 +88,22 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Próximo arquivo / anterior | `Ctrl+Tab` / `Ctrl+Shift+Tab` | `Espaço b n` / `Espaço b p` |
 | Fechar arquivo | | `Espaço b d` |
 | Dividir à direita | `Ctrl+W`, depois `v` | `Espaço b v` |
-| Fechar painel | `:close` | `Espaço x` |
+| Fechar painel | `Shift+Esc` | `Espaço x` ou `:close` |
 | Definição | `Ctrl+B` | `Espaço c d` |
-| Referências | `Alt+F7` | `Espaço c i` |
+| Implementação / definição do tipo | `Ctrl+Alt+B` / `Ctrl+Shift+B` | |
+| Voltar / avançar na navegação | `Ctrl+Alt+←` / `Ctrl+Alt+→` | |
+| Referências | `Alt+F7` ou `Ctrl+Alt+F7` | `Espaço c i` |
 | Renomear símbolo | `Shift+F6` | `Espaço c r` |
 | Ações de código | `Alt+Enter` | `Espaço c a` |
 | Documentação / assinatura | `Ctrl+Q` / `Ctrl+P` | `K` para documentação |
 | Formatar | `Ctrl+Alt+L` | `Espaço c f` |
+| Organizar imports | `Ctrl+Alt+O` | `Espaço c o` ou `:OrganizarImports` |
+| Erros e avisos do arquivo | `Ctrl+Shift+Q` | |
 | Próximo erro / anterior | `F2` / `Shift+F2` | `Espaço c e` mostra o erro da linha |
 | Todos os diagnósticos | `Alt+6` | |
-| Símbolos do arquivo | `Alt+7` | `Espaço c s` |
+| Símbolos do arquivo | `Alt+7` ou `Ctrl+F12` | `Espaço c s` |
 | Terminal integrado | `Alt+F12` | `Espaço t` |
+| Novo terminal como buffer | `Ctrl+Shift+T` | `Espaço b t` |
 | Git e commits | `Ctrl+K` ou `Alt+0` | `Espaço g g` |
 | Todas as alterações do Git | `:Changes` | `Espaço g v` |
 
@@ -184,13 +192,31 @@ Abra ou salve o arquivo com sua extensão, como `.c`, `.go`, `.ts` ou `.py`, den
 
 Se o menu não aparecer, `:set filetype?` mostra a linguagem detectada, `:checkhealth vim.lsp` mostra os servidores conectados e `:Mason` mostra as instalações. Um rascunho sem nome pode não ter linguagem definida. O autocomplete de linguagem funciona no buffer de código; o terminal tem a conclusão de comandos do zsh.
 
+### Erros e imports
+
+`Ctrl+Shift+Q` abre os erros e avisos reportados para o arquivo atual, inclusive enquanto você digita. Escolha um item e pressione Enter para ir até a linha. Esc fecha a lista; pressione novamente se ainda estiver no campo de busca. `F2` e `Shift+F2` navegam pelos diagnósticos, e `Alt+Enter` mostra as correções oferecidas para o código. `Alt+6` mostra diagnósticos dos arquivos analisados no projeto.
+
+As mensagens vêm dos servidores de linguagem. Por exemplo, em TypeScript, atribuir uma string a uma variável declarada como `number` aparece nessa lista. O servidor precisa estar conectado e ter terminado de analisar o arquivo; `:checkhealth vim.lsp` ajuda a conferir isso.
+
+O Blink aplica o import fornecido pelo servidor quando você aceita uma sugestão de símbolo externo. Use `Ctrl+Espaço`, escolha a sugestão e pressione Enter. A organização de imports também roda ao salvar com `Ctrl+S` ou `:w`:
+
+| Linguagem | Ao salvar |
+| --- | --- |
+| JavaScript, TypeScript, JSX e TSX | Vtsls adiciona imports que consegue resolver, remove os não usados e organiza a lista |
+| Go | Gopls adiciona imports ausentes e remove os não usados |
+| Python | Ruff organiza e remove imports não usados; respeita `noqa` e não aplica fixes classificados como inseguros |
+
+`Ctrl+Alt+O`, `Espaço c o` e `:OrganizarImports` executam a organização sem salvar o arquivo. Nas demais linguagens, esse comando solicita a ação de organizar imports ao servidor, quando disponível. Para Python, a inclusão vem das sugestões de autoimport do Basedpyright; a limpeza ao salvar não adivinha módulos para nomes desconhecidos.
+
+Se quiser salvar um rascunho mantendo os imports ainda sem uso, execute `:noautocmd write`. Uma falha ou demora da ferramenta de imports gera uma notificação e permite salvar o conteúdo. A limpeza usa os plugins Blink/nvim-lspconfig e as ferramentas já instaladas. Referências: [Vtsls](https://github.com/yioneko/vtsls#code-actions), [Gopls](https://go.dev/gopls/editor/vim#imports-and-formatting) e [Ruff](https://docs.astral.sh/ruff/linter/#fixes).
+
 ### Ghostty e Alacritty
 
 No Ghostty, as antigas ações de `Ctrl+Z` e `Ctrl+D` impediam desfazer e duplicar no editor. Agora fechar painel usa `Ctrl+Shift+W`, e dividir à direita usa `Ctrl+Shift+D`. Reinicie o terminal para garantir que os novos atalhos foram carregados.
 
 `Ctrl+Shift+←/→` e `Ctrl+Tab`/`Ctrl+Shift+Tab` chegam ao Neovim para selecionar palavras e trocar buffers. Para trocar as abas do próprio Ghostty, use `Ctrl+PageUp/PageDown`.
 
-O Alacritty mantém seus atalhos atuais e captura algumas combinações, como `Ctrl+Shift+F`. Use as alternativas com Espaço quando isso acontecer. Combinações com Ctrl e Shift também podem chegar como a mesma tecla em terminais sem suporte a teclado estendido. Nem todos os atalhos do Zed têm equivalente direto no Neovim.
+No Neovim, o Alacritty encaminha `Ctrl+Shift+Q/F/B/T` e `Shift+Esc` ao editor. Na tela normal do shell, `Ctrl+Shift+F/B` continuam abrindo a busca do terminal. Essa distinção usa o modo de tela alternativa do terminal. Combinações com Ctrl e Shift podem chegar como a mesma tecla em outros terminais sem suporte a teclado estendido. Nem todos os atalhos do Zed têm equivalente direto no Neovim.
 
 ### Fonte e legibilidade
 
@@ -363,6 +389,8 @@ Os testes específicos do terminal e da interface Git conferem a preservação d
 
 O teste de janelas verifica o histórico sem borda e seu fechamento por Esc, q e Espaço x, bordas explícitas de plugins, diagnósticos, campos de entrada com rótulo visível, popup local do Octo e buscas nos temas claro e escuro. Também confere a divisão vertical e o fechamento de um painel com dois rascunhos preservados.
 
+O teste de imports usa servidores reais de TypeScript, Go e Python. Verifica a abertura de um erro de tipo com Ctrl+Shift+Q, o autoimport ao aceitar uma sugestão do Blink, inclusão/remoção ao salvar, organização manual, preservação de `noqa`, tratamento de timeout e os atalhos de navegação e terminal. As sequências de teclado do Alacritty também foram enviadas a um Neovim em PTY para conferir a decodificação; o teclado físico na janela gráfica não foi conferido.
+
 As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
 
 O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed.dev/schema/themes/v0.2.0.json), e as cores principais do Tomorrow Night foram comparadas com a extensão instalada. A aparência do tema novo na janela do Zed não foi conferida. Na verificação desta mudança, a suíte geral passou na segunda execução: a primeira parou ao esperar a saída do modo de edição depois de fechar o autocomplete com Esc. O teste específico de temas passou.
@@ -373,6 +401,7 @@ nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-themes.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-terminal.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-git-ui.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-windows.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-imports.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check
