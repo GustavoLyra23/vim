@@ -8,6 +8,8 @@ vim.fn.writefile({ "#!/bin/bash", "set -o pipefail", "cat | " .. vim.fn.shellesc
 vim.fn.setfperm(fixture .. "/bin/node", "rwx------")
 local channel = vim.fn.jobstart({
   vim.v.progpath, "--embed", "--headless", "-i", "NONE",
+  -- Mensagens continuam visíveis, mas sem paginação interativa no teste headless.
+  "--cmd", "set nomore",
   "--cmd", "set rtp+=" .. vim.fn.stdpath("data") .. "/lazy/mason.nvim",
   -- Instalações usam rede e são verificadas separadamente; este teste usa os LSPs locais.
   "--cmd", 'lua require("mason-registry").refresh = function() end',
@@ -29,33 +31,94 @@ local function git(...)
   return result.stdout
 end
 local ok, err = xpcall(function()
+  assert(lua('local h=vim.api.nvim_get_hl(0,{name="Normal",link=false}); return h.bg==0x1d1f21 and h.fg==0xc5c8c6'), "Tomorrow Night não foi aplicado")
   git("init", "-q")
   git("config", "user.name", "Neovim Test")
   git("config", "user.email", "neovim-test@example.invalid")
-  vim.fn.writefile({ "linha original" }, fixture .. "/sample.txt")
-  git("add", "sample.txt")
+  vim.fn.writefile({ "linha original" }, fixture .. "/sample.fixture")
+  git("add", "sample.fixture")
   git("commit", "-qm", "fixture")
-  lua('vim.cmd.edit(...)', fixture .. "/sample.txt")
+  lua('vim.cmd.edit(...)', fixture .. "/sample.fixture")
   vim.rpcrequest(channel, "nvim_input", "<C-d>")
   wait_for('return vim.api.nvim_buf_line_count(0) == 2', "Ctrl+D não duplicou a linha")
   vim.rpcrequest(channel, "nvim_input", "<C-z>")
   wait_for('return vim.api.nvim_buf_line_count(0) == 1', "Ctrl+Z não desfez a duplicação")
   vim.rpcrequest(channel, "nvim_input", "A alterada<Esc><C-s>")
   wait_for('return not vim.bo.modified', "Ctrl+S não salvou")
-  assert(vim.fn.readfile(fixture .. "/sample.txt")[1] == "linha original alterada")
+  assert(vim.fn.readfile(fixture .. "/sample.fixture")[1] == "linha original alterada")
   print("PASS: editar, duplicar, desfazer e salvar pelos atalhos")
 
   wait_for('return vim.b.gitsigns_status_dict ~= nil', "Gitsigns não detectou o repositório")
+  wait_for('local h=require("gitsigns").get_hunks(); return h and #h > 0', "Gitsigns não terminou de calcular o trecho alterado")
   lua('require("gitsigns").stage_hunk()')
   assert(vim.wait(5000, function() return git("diff", "--cached"):find("original alterada", 1, true) ~= nil end, 50))
   lua('require("gitsigns").undo_stage_hunk()')
   assert(vim.wait(5000, function() return git("diff", "--cached") == "" end, 50))
   lua('vim.cmd.DiffviewOpen()')
   wait_for('return require("diffview.lib").get_current_view() ~= nil', "Diffview não abriu")
+  wait_for('local v=require("diffview.lib").get_current_view(); return v.cur_entry and v.cur_entry.opened', "Diffview não terminou de carregar o arquivo")
   lua('vim.cmd.DiffviewClose(); require("neogit").open()')
   wait_for('return vim.bo.filetype == "NeogitStatus"', "Neogit não abriu o painel")
   lua('require("neogit").close()')
   print("PASS: stage de trecho, desfazer stage, diff e painel de commits")
+
+  lua('vim.cmd.enew()')
+  local selection_buffer = lua('return vim.api.nvim_get_current_buf()')
+  for _, case in ipairs({
+    { "alpha beta gamma", "0<C-S-Right>", "Zbeta gamma" },
+    { "alpha beta gamma", "0i<C-S-Right><C-S-Right><C-S-Left>", "Zbeta gamma" },
+    { "alpha beta gamma", "A<C-S-Left>", "alpha beta Z" },
+    { "ação café fim", "0i<C-S-Right>", "Zcafé fim" },
+    { "alpha beta gamma", "0i<S-Right><S-Right>", "Zpha beta gamma" },
+  }) do
+    lua('vim.api.nvim_buf_set_lines(0, 0, -1, false, {...})', case[1])
+    vim.rpcrequest(channel, "nvim_input", case[2])
+    wait_for('return vim.fn.mode() == "s"', "As setas com Shift não iniciaram a seleção")
+    vim.rpcrequest(channel, "nvim_input", "Z<Esc>")
+    wait_for('return vim.fn.mode() == "n" and vim.api.nvim_get_current_line() == ' .. vim.inspect(case[3]), "A seleção substituiu o trecho errado")
+  end
+  -- Clipboard em memória: verifica o texto copiado sem depender da sessão gráfica.
+  lua([[
+    vim.g.clipboard = {
+      name = 'test', copy = { ['+'] = function(lines) _G.copied = lines end, ['*'] = function() end },
+      paste = { ['+'] = function() return {_G.copied or {}, 'v'} end, ['*'] = function() return {{}, 'v'} end },
+    }
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {'alpha beta gamma'})
+  ]])
+  vim.rpcrequest(channel, "nvim_input", "0i<C-S-Right><C-c>")
+  wait_for('return _G.copied and _G.copied[1] == "alpha "', "Ctrl+C não copiou a seleção por palavra")
+  vim.rpcrequest(channel, "nvim_input", "<Esc>0i<C-S-Right><C-x>")
+  wait_for('return vim.api.nvim_get_current_line() == "beta gamma"', "Ctrl+X não recortou a seleção")
+  vim.rpcrequest(channel, "nvim_input", "<Esc>0i<C-S-Right><C-v><Esc>")
+  wait_for('return vim.fn.mode() == "n" and vim.api.nvim_get_current_line() == "alpha gamma"', "Ctrl+V não substituiu a seleção")
+  print("PASS: seleção nativa, expansão, redução, acentos, copiar, recortar e substituir")
+
+  vim.rpcrequest(channel, "nvim_input", "<C-n>")
+  wait_for('return vim.fn.mode() == "i" and vim.api.nvim_buf_get_name(0) == "" and vim.api.nvim_get_current_line() == ""', "Ctrl+N não abriu um buffer vazio para editar")
+  local new_buffer = lua('return vim.api.nvim_get_current_buf()')
+  assert(new_buffer ~= selection_buffer)
+  assert(lua('return vim.bo[...].modified', selection_buffer), "Criar um buffer perdeu as alterações do anterior")
+  vim.rpcrequest(channel, "nvim_input", "rascunho<Esc><Space>bb")
+  wait_for('local p=Snacks.picker.get({source="buffers"})[1]; return p and #p:items() >= 2', "A lista de buffers não abriu")
+  lua([[
+    local target = ...
+    local picker = Snacks.picker.get({source='buffers'})[1]
+    for index, item in ipairs(picker:items()) do
+      if item.buf == target then picker.list:move(index, true); assert(picker:current().buf == target); return end
+    end
+    error('Buffer com alterações ausente na lista')
+  ]], selection_buffer)
+  vim.rpcrequest(channel, "nvim_input", "<CR>")
+  wait_for('return vim.api.nvim_get_current_buf() == ' .. selection_buffer, "A lista não abriu o buffer selecionado")
+  assert(lua('return vim.api.nvim_get_current_line()') == "alpha gamma")
+  assert(lua('return vim.api.nvim_buf_get_lines(..., 0, -1, false)[1]', new_buffer) == "rascunho")
+  vim.rpcrequest(channel, "nvim_input", "<C-Tab>")
+  wait_for('return vim.api.nvim_get_current_buf() ~= ' .. selection_buffer, "Ctrl+Tab não alternou o buffer")
+  vim.rpcrequest(channel, "nvim_input", "<C-S-Tab>")
+  wait_for('return vim.api.nvim_get_current_buf() == ' .. selection_buffer, "Ctrl+Shift+Tab não voltou ao buffer")
+  lua('vim.api.nvim_buf_delete(..., {force=true})', new_buffer)
+  lua('vim.api.nvim_buf_delete(..., {force=true})', selection_buffer)
+  print("PASS: criar, listar e abrir buffers preserva os rascunhos")
 
   vim.fn.writefile({ '{"name":"nvim-check","private":true}' }, fixture .. "/package.json")
   vim.fn.writefile({ '{"compilerOptions":{"strict":true}}' }, fixture .. "/tsconfig.json")
@@ -82,7 +145,8 @@ local ok, err = xpcall(function()
   vim.rpcrequest(channel, "nvim_input", "<CR>")
   wait_for('return vim.api.nvim_buf_line_count(0) == 3', "Enter aceitou uma sugestão sem seleção")
   assert(lua('return vim.api.nvim_buf_get_lines(0, 1, 2, false)[1]') == "person.")
-  vim.rpcrequest(channel, "nvim_input", "<Esc>")
+  vim.rpcrequest(channel, "nvim_input", "<Esc><Esc>")
+  wait_for('return vim.fn.mode() == "n"', "Não saiu da edição após fechar as sugestões")
   lua('vim.api.nvim_buf_set_lines(0, 1, -1, false, {"person."}); vim.api.nvim_win_set_cursor(0, {2, 6})')
   vim.rpcrequest(channel, "nvim_input", "A<C-Space>")
   wait_for('return require("blink.cmp").is_menu_visible()', "Menu não reabriu")
@@ -135,20 +199,22 @@ local ok, err = xpcall(function()
   ]]))
   print("PASS: servidor Gradle só atende arquivos de build")
 
-  git("add", "sample.txt")
+  git("add", "sample.fixture")
   git("commit", "-qm", "base para conflito")
   local branch = vim.trim(git("branch", "--show-current"))
   git("switch", "-qc", "incoming")
-  vim.fn.writefile({ "alteracao incoming" }, fixture .. "/sample.txt")
+  vim.fn.writefile({ "alteracao incoming" }, fixture .. "/sample.fixture")
   git("commit", "-qam", "incoming")
   git("switch", "-q", branch)
-  vim.fn.writefile({ "alteracao local" }, fixture .. "/sample.txt")
+  vim.fn.writefile({ "alteracao local" }, fixture .. "/sample.fixture")
   git("commit", "-qam", "local")
   local merge = vim.system({ "git", "-C", fixture, "merge", "incoming" }, { text = true }):wait()
   assert(merge.code == 1, "O cenário de conflito não foi criado")
   lua('vim.cmd.DiffviewOpen()')
   wait_for('local v=require("diffview.lib").get_current_view(); return v ~= nil and #v.files.conflicting == 1', "Diffview não mostrou o conflito")
-  lua('local v=require("diffview.lib").get_current_view(); v:set_file(v.files.conflicting[1])')
+  wait_for('local v=require("diffview.lib").get_current_view(); return v.cur_entry and v.cur_entry.opened', "Diffview não terminou a abertura inicial")
+  lua('local v=require("diffview.lib").get_current_view(); if v.cur_entry ~= v.files.conflicting[1] then v:set_file(v.files.conflicting[1]) end')
+  wait_for('local v=require("diffview.lib").get_current_view(); return v.cur_entry == v.files.conflicting[1] and v.cur_entry.opened', "Diffview não terminou de carregar as versões do conflito")
   wait_for('return #vim.api.nvim_tabpage_list_wins(0) >= 4', "Painéis de comparação e resolução não abriram")
   lua('vim.cmd.DiffviewClose()')
   print("PASS: conflito real exibido com painéis de comparação e resolução")

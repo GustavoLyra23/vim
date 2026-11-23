@@ -1,6 +1,6 @@
 # Neovim no dia a dia
 
-Configuração de Gustavo, preparada em 23/11/2026. Usa as cores Adwaita Dark do Ghostty, com o mesmo fundo personalizado `#1c1c1f`, e atalhos do mapa JetBrains selecionado no Zed. A paleta do terminal integrado e as cores da seleção também seguem o Ghostty. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
+Configuração de Gustavo, preparada em 23/11/2026. Usa Tomorrow Night, com fundo `#1d1f21`, texto `#c5c8c6` e atalhos do mapa JetBrains selecionado no Zed. O Neovim continua tendo modos de edição; os painéis de Git e GitHub têm seus próprios atalhos.
 
 ## Começar
 
@@ -41,6 +41,9 @@ Há três formas de usar o editor:
 | `:q!` | Fecha sem salvar; use quando quiser abandonar as alterações |
 | `:NeovimGuia` | Abre este guia |
 | `:Mason` | Mostra os servidores de linguagem e suas instalações |
+| `:enew` | Cria um buffer vazio |
+| `:ls` | Lista os buffers e seus números |
+| `:buffer 3` | Abre o buffer de número 3 |
 
 Para treinar, execute `nvim /tmp/treino-neovim.txt` no terminal. Aperte `i`, escreva uma frase e pressione Esc. Digite `:w` e Enter para salvar; depois `:q` e Enter para sair. Abra o mesmo arquivo novamente para conferir o texto salvo.
 
@@ -55,6 +58,8 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Ação | Atalho próximo do Zed | Alternativa |
 | --- | --- | --- |
 | Abrir arquivo | `Ctrl+E` ou `Ctrl+Shift+N` | `Espaço f f` |
+| Novo buffer | `Ctrl+N` | `Espaço b a` |
+| Escolher buffer aberto | | `Espaço b b` |
 | Buscar no arquivo | `Ctrl+F` | `/texto` e Enter |
 | Buscar no projeto | `Ctrl+Shift+F` | `Espaço f g` |
 | Paleta de comandos | `Ctrl+Shift+A` | `:` seguido do comando e Tab |
@@ -63,6 +68,8 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Salvar | `Ctrl+S` | `Espaço w` |
 | Desfazer / refazer | `Ctrl+Z` / `Ctrl+Shift+Z` | `u` / `Ctrl+R` em navegação |
 | Selecionar tudo | `Ctrl+A` | `ggVG` |
+| Selecionar por palavra | `Ctrl+Shift+←` / `Ctrl+Shift+→` | |
+| Selecionar por caractere ou linha | `Shift+←/→` ou `Shift+↑/↓` | |
 | Copiar / recortar seleção | `Ctrl+C` / `Ctrl+X` | `y` / `d` na seleção visual |
 | Colar | `Ctrl+V` | `p` ou colagem do terminal |
 | Duplicar / apagar linha | `Ctrl+D` / `Ctrl+Y` | `yyp` / `dd` |
@@ -84,13 +91,39 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 
 Use `v` para selecionar caracteres e `V` para selecionar linhas. A área de transferência depende do suporte do terminal; a colagem do próprio terminal, normalmente `Ctrl+Shift+V`, também funciona.
 
+### Seleção com Shift
+
+Segure Ctrl e Shift e aperte ← ou → para selecionar palavras, tanto ao navegar quanto ao escrever. Repita para ampliar a seleção; use a direção contrária para reduzi-la. O movimento segue os limites de palavra do Neovim e pode incluir o espaço entre palavras. Shift com as setas seleciona por caractere ou linha; Shift+Home/End vai até o início ou fim da linha.
+
+Essa seleção entra no modo Select: digitar substitui o trecho selecionado. `Ctrl+C` copia, `Ctrl+X` recorta e `Ctrl+V` substitui pelo conteúdo da área de transferência. Esc cancela a seleção. Para os comandos tradicionais do Vim, como `y`, use a seleção visual com `v` ou `V`, ou pressione `Ctrl+G` para converter a seleção atual em visual.
+
+### Buffers abertos e rascunhos
+
+Um buffer é o conteúdo aberto na memória do editor. Pode ser um arquivo existente ou um rascunho ainda sem nome. A barra superior mostra esses buffers.
+
+- `Ctrl+N` cria um buffer vazio e já entra no modo de escrita. `Espaço b a` faz o mesmo no modo normal.
+- `Esc`, depois `Espaço b b`, abre a lista. Digite parte do nome, escolha com as setas e pressione Enter. Buffers sem nome aparecem como `[Scratch]`.
+- `Ctrl+Tab` avança e `Ctrl+Shift+Tab` volta entre os buffers. Trocar de buffer mantém as alterações na memória; ainda é preciso salvá-las no disco.
+- Para dar um nome ao rascunho, pressione Esc e use `:w caminho/do/arquivo`, seguido de Enter. Depois, `Ctrl+S` salva normalmente.
+- `Espaço b d` fecha o buffer atual e pergunta o que fazer se houver alterações sem salvar.
+
 No terminal integrado, `Ctrl+\` seguido de `Ctrl+N` volta à navegação. Dois Esc rápidos também funcionam. Pressione `i` para voltar ao terminal.
 
 ### Ghostty e Alacritty
 
 No Ghostty, as antigas ações de `Ctrl+Z` e `Ctrl+D` impediam desfazer e duplicar no editor. Agora fechar painel usa `Ctrl+Shift+W`, e dividir à direita usa `Ctrl+Shift+D`. Reinicie o terminal para garantir que os novos atalhos foram carregados.
 
+`Ctrl+Shift+←/→` e `Ctrl+Tab`/`Ctrl+Shift+Tab` chegam ao Neovim para selecionar palavras e trocar buffers. Para trocar as abas do próprio Ghostty, use `Ctrl+PageUp/PageDown`.
+
 O Alacritty mantém seus atalhos atuais e captura algumas combinações, como `Ctrl+Shift+F`. Use as alternativas com Espaço quando isso acontecer. Combinações com Ctrl e Shift também podem chegar como a mesma tecla em terminais sem suporte a teclado estendido. Nem todos os atalhos do Zed têm equivalente direto no Neovim.
+
+### Fonte e legibilidade
+
+O Ghostty desenha as letras do Neovim e do shell. A configuração usa Cascadia Code Medium em 14 pt, com um traço mais pesado e tamanho maior que os anteriores, Regular em 13,2 pt. Essa mudança vale para todo o terminal. O Neovim usa Tomorrow Night; as cores do shell continuam vindo do tema do Ghostty.
+
+O Ghostty já usa antialiasing e hinting leve por padrão no Linux. A aparência depende também da resolução e da escala do monitor; o ajuste de peso e tamanho precisa ser avaliado na sua tela. `font-thicken` é exclusivo do macOS. Veja a [referência de fontes do Ghostty](https://ghostty.org/docs/config/reference#font-size).
+
+Salve o trabalho e reabra o Ghostty e o Neovim para carregar tudo. No Ghostty, `Ctrl++` aumenta a fonte, `Ctrl+-` diminui e `Ctrl+0` restaura os 14 pt configurados. Para mudar o padrão, edite `font-size` ou `font-style` em `~/dotfiles/ghostty/config.ghostty`.
 
 ## Git: revisar e montar commits por trecho
 
@@ -213,8 +246,8 @@ ghostty +validate-config
 git -C ~/dotfiles diff --check
 ```
 
-Passaram os testes de edição pelos atalhos, menu e sugestões reais de TypeScript/Python, inicialização de CSS/HTML/JSON/YAML/shell/C/Docker, stage por trecho, retirada do stage, painel de commits e visualização de conflito real. Também passaram a restrição do Gradle a arquivos de build, o encaminhamento dos comandos do Codex e o carregamento do Octo. A abertura do painel do Codex foi conferida separadamente em um terminal PTY, com CLI simulado.
+Passaram os testes de edição pelos atalhos, seleção por palavra e caractere, substituição de texto com acentos, copiar/recortar/colar com clipboard simulado e criação e reabertura de buffers preservando rascunhos. Também foram verificados o menu e as sugestões reais de TypeScript/Python, inicialização de CSS/HTML/JSON/YAML/shell/C/Docker, stage por trecho, retirada do stage, painel de commits e visualização de conflito real. Passaram a restrição do Gradle a arquivos de build, o encaminhamento dos comandos do Codex e o carregamento do Octo. A abertura do painel do Codex foi conferida separadamente em um terminal PTY, com CLI simulado.
 
-O teste usa os plugins e servidores locais. Ele desativa a consulta ao catálogo do Mason e adapta o stdio do Node a pipes, pois o sandbox desta sessão restringe os canais usados por esses processos. A instalação dos servidores e a interação online com Codex/GitHub precisam de validação separada. O reconhecimento físico de todas as teclas e o clipboard no terminal gráfico não foram testados.
+O teste usa os plugins e servidores locais, com paginação de mensagens desativada para não esperar teclas no modo headless. Ele desativa a consulta ao catálogo do Mason e adapta o stdio do Node a pipes, pois o sandbox desta sessão restringe os canais usados por esses processos. A instalação dos servidores e a interação online com Codex/GitHub precisam de validação separada. O reconhecimento físico de todas as teclas, o clipboard no terminal gráfico e a aparência da fonte no monitor não foram testados.
 
 Os atalhos foram comparados com o [mapa JetBrains do Zed](https://github.com/zed-industries/zed/blob/main/assets/keymaps/linux/jetbrains.json). Para detalhes dos painéis e manutenção, consulte as documentações de [Neogit](https://github.com/NeogitOrg/neogit), [Diffview](https://github.com/sindrets/diffview.nvim), [Octo](https://github.com/pwntester/octo.nvim), [Blink](https://cmp.saghen.dev/configuration/keymap) e [Mason LSP](https://github.com/mason-org/mason-lspconfig.nvim).

@@ -2,20 +2,13 @@ return {
   {
     "nvim-mini/mini.nvim",
     config = function()
-      -- Adwaita Dark do Ghostty, com o fundo personalizado do terminal.
+      -- Tomorrow Night.
       require("mini.base16").setup({ palette = {
-        base00 = "#1c1c1f", base01 = "#1d1d20", base02 = "#241f31", base03 = "#c0bfbc",
-        base04 = "#c0bfbc", base05 = "#ffffff", base06 = "#f6f5f4", base07 = "#ffffff",
-        base08 = "#ed333b", base09 = "#f5c211", base0A = "#f8e45c", base0B = "#57e389",
-        base0C = "#4fd2fd", base0D = "#51a1ff", base0E = "#c061cb", base0F = "#c061cb",
+        base00 = "#1d1f21", base01 = "#282a2e", base02 = "#373b41", base03 = "#969896",
+        base04 = "#b4b7b4", base05 = "#c5c8c6", base06 = "#e0e0e0", base07 = "#ffffff",
+        base08 = "#cc6666", base09 = "#de935f", base0A = "#f0c674", base0B = "#b5bd68",
+        base0C = "#8abeb7", base0D = "#81a2be", base0E = "#b294bb", base0F = "#a3685a",
       } })
-      vim.api.nvim_set_hl(0, "Visual", { fg = "#5e5c64", bg = "#ffffff" })
-      for index, color in ipairs({
-        "#241f31", "#c01c28", "#2ec27e", "#f5c211", "#1e78e4", "#9841bb", "#0ab9dc", "#c0bfbc",
-        "#5e5c64", "#ed333b", "#57e389", "#f8e45c", "#51a1ff", "#c061cb", "#4fd2fd", "#f6f5f4",
-      }) do
-        vim.g["terminal_color_" .. (index - 1)] = color
-      end
       require("mini.icons").setup({ style = "ascii" })
       require("mini.icons").mock_nvim_web_devicons()
       require("mini.statusline").setup({ use_icons = false })

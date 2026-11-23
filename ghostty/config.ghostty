@@ -4,10 +4,14 @@ cursor-text = cell-background
 window-decoration = none
 
 font-family = "Cascadia Code"
-font-style = Regular
+font-style = Medium
 font-style-bold = Bold
-# GNOME Console: 12 pt com zoom de 110%.
-font-size = 13.2
+font-size = 14
 
 keybind = ctrl+shift+w=close_surface
 keybind = ctrl+shift+d=new_split:right
+# Deixa o Neovim receber a seleção por palavra e a troca de buffers.
+keybind = ctrl+shift+left=unbind
+keybind = ctrl+shift+right=unbind
+keybind = ctrl+tab=unbind
+keybind = ctrl+shift+tab=unbind
