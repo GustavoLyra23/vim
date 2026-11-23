@@ -21,7 +21,10 @@ local ok, err = xpcall(function()
       local normal = vim.api.nvim_get_hl(0, {name='Normal', link=false})
       for _, group in ipairs(vim.fn.getcompletion('MiniTabline', 'highlight')) do
         local hl = vim.api.nvim_get_hl(0, {name=group, link=false})
-        assert(hl.bg == normal.bg and hl.fg == normal.fg, group .. ' tem cores diferentes do editor')
+        assert(hl.bg == normal.bg, group .. ' tem fundo diferente do editor')
+        if not group:find('MiniTablineGit', 1, true) then
+          assert(hl.fg == normal.fg, group .. ' mudou a cor de um buffer sem alterações')
+        end
       end
       assert(vim.api.nvim_get_hl(0, {name='MiniTablineCurrent'}).bold, 'Buffer ativo sem indicação')
       assert(vim.api.nvim_get_hl(0, {name='MiniTablineModifiedHidden'}).underline, 'Buffer modificado sem indicação')

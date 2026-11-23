@@ -12,22 +12,7 @@ return {
       require("mini.icons").setup({ style = "ascii" })
       require("mini.icons").mock_nvim_web_devicons()
       require("mini.statusline").setup({ use_icons = false })
-      require("mini.tabline").setup({ show_icons = false })
-      local function tabline_colors()
-        local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
-        for _, state in ipairs({ "Current", "Visible", "Hidden", "ModifiedCurrent", "ModifiedVisible", "ModifiedHidden", "Fill", "Tabpagesection", "Trunc" }) do
-          vim.api.nvim_set_hl(0, "MiniTabline" .. state, {
-            fg = normal.fg, bg = normal.bg,
-            bold = state:find("Current") ~= nil,
-            underline = state:find("Modified") ~= nil,
-          })
-        end
-      end
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        group = vim.api.nvim_create_augroup("UniformTabline", { clear = true }),
-        callback = tabline_colors,
-      })
-      tabline_colors()
+      require("bufferbar").setup()
       require("mini.pairs").setup()
     end,
   },
@@ -116,7 +101,17 @@ return {
     dependencies = { "saghen/blink.cmp", "mason-org/mason.nvim", "mason-org/mason-lspconfig.nvim" },
     config = function() require("languages") end,
   },
-  { "lewis6991/gitsigns.nvim", opts = { signcolumn = true, numhl = false } },
+  {
+    "lewis6991/gitsigns.nvim",
+    opts = {
+      signcolumn = true,
+      numhl = false,
+      current_line_blame = true,
+      current_line_blame_opts = { delay = 500, virt_text_pos = "eol" },
+      current_line_blame_formatter = " <author> | <author_time:%d/%m/%Y> | <summary>",
+      current_line_blame_formatter_nc = " Alteração local (sem commit)",
+    },
+  },
   {
     "sindrets/diffview.nvim",
     cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },

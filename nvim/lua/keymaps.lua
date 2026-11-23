@@ -108,6 +108,7 @@ bind("<leader>gs", function() require("gitsigns").stage_hunk() end, "Stage do tr
 bind("<leader>gs", function() require("gitsigns").stage_hunk({ vim.fn.line("."), vim.fn.line("v") }) end, "Stage da selecao", "x")
 bind("<leader>gu", function() require("gitsigns").undo_stage_hunk() end, "Desfazer stage do trecho")
 bind("<leader>gb", function() require("gitsigns").blame_line({ full = true }) end, "Autor da linha")
+bind("<leader>gB", function() require("gitsigns").toggle_current_line_blame() end, "Mostrar / ocultar autor na linha")
 bind("]c", function() require("gitsigns").nav_hunk("next") end, "Proximo trecho alterado")
 bind("[c", function() require("gitsigns").nav_hunk("prev") end, "Trecho alterado anterior")
 bind("<leader>an", function() M.codex(false) end, "Codex: conversa / painel")

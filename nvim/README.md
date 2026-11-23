@@ -106,6 +106,8 @@ Um buffer é o conteúdo aberto na memória do editor. Pode ser um arquivo exist
 
 A barra usa o mesmo fundo do editor em qualquer tema. O arquivo ativo aparece em negrito; arquivos com alterações sem salvar têm o nome sublinhado.
 
+Os nomes também acompanham o estado no Git: verde para novos, amarelo para modificados ou renomeados e vermelho para removidos ou em conflito. Mudanças ainda sem salvar também recebem a cor de modificação. Colocar um arquivo no stage mantém sua cor; depois do commit, ele volta à cor normal. Os tons seguem o tema escolhido. A atualização ocorre ao salvar, trocar de buffer, voltar do terminal ou retornar ao editor.
+
 - `Ctrl+N` cria um buffer vazio e já entra no modo de escrita. `Espaço b a` faz o mesmo no modo normal.
 - `Esc`, depois `Espaço b b`, abre a lista. Digite parte do nome, escolha com as setas e pressione Enter. Buffers sem nome aparecem como `[Scratch]`.
 - `Ctrl+Tab` avança e `Ctrl+Shift+Tab` volta entre os buffers. Trocar de buffer mantém as alterações na memória; ainda é preciso salvá-las no disco.
@@ -197,6 +199,8 @@ O Zed continua com Tomorrow Night selecionado até você trocar pelo seletor. Se
 
 ## Git: revisar e montar commits por trecho
 
+Ao parar o cursor por meio segundo, o fim da linha mostra o autor, a data e a mensagem do último commit que alterou aquele trecho. Uma linha ainda não commitada mostra `Alteração local (sem commit)`. Essa indicação vem do histórico do Git e não identifica quem digitou uma alteração ainda sem commit. `Espaço g B`, com B maiúsculo, mostra ou oculta a indicação; `Espaço g b` abre os detalhes.
+
 1. Abra `Espaço g d` para comparar as alterações com o índice do Git. O painel lateral lista os arquivos; Enter abre a comparação.
 2. No arquivo editável, `]c` e `[c` navegam pelos trechos alterados. `Espaço g p` mostra o trecho atual.
 3. Use `Espaço g s` para colocar só esse trecho no stage. Uma seleção com `V`, seguida do mesmo atalho, prepara apenas o intervalo selecionado. `Espaço g u` desfaz o último stage de trecho.
@@ -213,6 +217,7 @@ Outros atalhos:
 | Histórico do arquivo | `Espaço g h` |
 | Histórico do projeto | `Espaço g H` |
 | Autor da linha | `Espaço g b` |
+| Mostrar / ocultar autor ao lado da linha | `Espaço g B` |
 
 Durante um conflito, abra `Espaço g d` e selecione o arquivo em conflito. O layout mostra as versões e o resultado editável. Revise o resultado, salve e coloque o arquivo resolvido no stage. `g?` mostra os comandos locais do Diffview. Nenhum atalho global descarta alterações automaticamente.
 
@@ -294,6 +299,7 @@ Na preparação inicial, a rede impediu parte dos downloads. Na conferência pos
 | `~/dotfiles/nvim/lua/plugins.lua` | Interface, autocomplete, Git e GitHub |
 | `~/dotfiles/nvim/lua/languages.lua` | Servidores de linguagem |
 | `~/dotfiles/nvim/lua/keymaps.lua` | Atalhos e painéis do Codex |
+| `~/dotfiles/nvim/lua/bufferbar.lua` | Cores dos arquivos na barra conforme o Git, preservando o fundo do tema |
 | `~/dotfiles/nvim/colors/tomorrow-zed.lua` | Tomorrow Night baseado na paleta do Zed |
 | `~/dotfiles/nvim/colors/pastel-branco.lua` | Tema claro personalizado do Neovim |
 | `~/dotfiles/nvim/examples/theme-preview.c` | Código exibido na prévia de temas |
@@ -318,6 +324,8 @@ Para restaurar o Alacritty, remova apenas o link `~/.config/alacritty/alacritty.
 
 O teste de integração usa arquivos e commits descartáveis em `/tmp`. Ele não faz commits nos projetos, não envia prompts de IA e não publica comentários no GitHub.
 
+Os testes específicos do terminal e da interface Git conferem a preservação de rascunhos, o shell em execução, as cores antes e depois do stage/commit, renomes, remoções, conflitos e autoria da linha. Na validação desses ajustes, a suíte geral parou no teste de copiar com Ctrl+C em modo headless; o mesmo resultado ocorreu com a configuração anterior. A verificação passou a exigir um resultado booleano verdadeiro, evitando que uma resposta nula do processo fosse tratada como sucesso. O comportamento físico de Ctrl+C no Alacritty não foi conferido nessa investigação.
+
 As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
 
 O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed.dev/schema/themes/v0.2.0.json), e as cores principais do Tomorrow Night foram comparadas com a extensão instalada. A aparência do tema novo na janela do Zed não foi conferida. Na verificação desta mudança, a suíte geral passou na segunda execução: a primeira parou ao esperar a saída do modo de edição depois de fechar o autocomplete com Esc. O teste específico de temas passou.
@@ -326,6 +334,7 @@ O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-themes.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-terminal.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-git-ui.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check

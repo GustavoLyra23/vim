@@ -20,7 +20,7 @@ local function lua(code, ...)
   return vim.rpcrequest(channel, "nvim_exec_lua", code, { ... })
 end
 local function wait_for(code, message, timeout)
-  local ready = vim.wait(timeout or 5000, function() return lua(code) end, 50)
+  local ready = vim.wait(timeout or 5000, function() return lua(code) == true end, 50)
   assert(ready, message .. " " .. vim.inspect(lua('return {file=vim.api.nvim_buf_get_name(0), ft=vim.bo.filetype, clients=vim.tbl_map(function(c) return c.name end, vim.lsp.get_clients()), error=vim.v.errmsg}')))
 end
 local function git(...)
