@@ -23,3 +23,12 @@ end
 vim.api.nvim_set_hl(0, "NormalFloat", { fg = "#c5c8c6", bg = "#17181a" })
 vim.api.nvim_set_hl(0, "LineNr", { fg = "#63666e", bg = "#1e1f21" })
 vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#ffffff", bg = "#1e1f21" })
+
+-- Deixa a imagem do Ghostty aparecer atrás do editor, mantendo os popups opacos.
+if vim.env.TERM_PROGRAM == "ghostty" then
+  for _, group in ipairs({ "Normal", "NormalNC", "LineNr", "CursorLineNr", "SignColumn", "FoldColumn", "CursorLine", "EndOfBuffer" }) do
+    local highlight = vim.api.nvim_get_hl(0, { name = group, link = false })
+    highlight.bg = nil
+    vim.api.nvim_set_hl(0, group, highlight)
+  end
+end

@@ -1,5 +1,9 @@
 theme = Adwaita Dark
-background = 1c1c1f
+background = 1e1f21
+background-opacity = 1
+background-image = /home/gustavo/.local/share/backgrounds/wallhaven-6olg97.jpg
+background-image-opacity = 0.03
+background-image-fit = contain
 cursor-text = cell-background
 window-decoration = none
 
