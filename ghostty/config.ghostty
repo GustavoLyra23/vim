@@ -1,14 +1,10 @@
 theme = Adwaita Dark
-background = 1e1f21
-background-opacity = 1
-background-image = /home/gustavo/.local/share/backgrounds/wallhaven-6olg97.jpg
-background-image-opacity = 0.03
-background-image-fit = contain
+background = 1c1c1f
 cursor-text = cell-background
 window-decoration = none
 
 font-family = "Cascadia Code"
-font-style = Medium
+font-style = Light
 font-style-bold = Bold
 font-size = 14
 

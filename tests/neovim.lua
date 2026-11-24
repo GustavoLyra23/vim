@@ -33,12 +33,7 @@ end
 local ok, err = xpcall(function()
   assert(lua([[
     local normal = vim.api.nvim_get_hl(0, {name='Normal', link=false})
-    assert(normal.fg == 0xc5c8c6)
-    if vim.env.TERM_PROGRAM == "ghostty" then
-      assert(normal.bg == nil)
-    else
-      assert(normal.bg == 0x1e1f21)
-    end
+    assert(normal.bg == 0x1e1f21 and normal.fg == 0xc5c8c6)
     for _, group in ipairs({'LineNr', 'SignColumn', 'CursorLine', 'EndOfBuffer'}) do
       local hl = vim.api.nvim_get_hl(0, {name=group, link=false})
       assert((hl.bg or normal.bg) == normal.bg, group .. ' tem um fundo diferente')
