@@ -44,7 +44,7 @@ function M.goto_function(direction)
 end
 
 vim.api.nvim_create_user_command("NeovimGuia", function()
-  vim.cmd.edit(vim.fn.stdpath("config") .. "/README.md")
+  vim.cmd.edit(vim.fn.stdpath("config") .. "/docs/guia-neovim.md")
 end, {})
 
 vim.api.nvim_create_user_command("Temas", function()
