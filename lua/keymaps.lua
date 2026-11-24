@@ -1,0 +1,174 @@
+local M = {}
+local map = vim.keymap.set
+local editor_modes = { "n", "i", "v" }
+local function bind(lhs, rhs, desc, modes)
+  map(modes or "n", lhs, rhs, { desc = desc, silent = true })
+end
+
+function M.codex(resume)
+  local cmd = resume and { "codex", "resume" } or { "codex" }
+  Snacks.terminal(cmd, { cwd = vim.fn.getcwd(), win = { position = "right", width = 0.5 } })
+end
+
+function M.goto_function(direction)
+  local buf, win = vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win()
+  local cursor = vim.api.nvim_win_get_cursor(win)
+  local tick = vim.api.nvim_buf_get_changedtick(buf)
+  local function before(a, b)
+    return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2])
+  end
+  vim.lsp.buf.document_symbol({ on_list = function(list)
+    if vim.api.nvim_get_current_win() ~= win or vim.api.nvim_get_current_buf() ~= buf
+      or vim.api.nvim_buf_get_changedtick(buf) ~= tick
+      or not vim.deep_equal(cursor, vim.api.nvim_win_get_cursor(win)) then
+      return
+    end
+    local target
+    for _, item in ipairs(list.items) do
+      if item.kind == "Function" or item.kind == "Method" or item.kind == "Constructor" then
+        local pos = { item.lnum, item.col - 1 }
+        local ahead = direction > 0 and before(cursor, pos) or direction < 0 and before(pos, cursor)
+        local nearer = not target or (direction > 0 and before(pos, target))
+          or (direction < 0 and before(target, pos))
+        if ahead and nearer then target = pos end
+      end
+    end
+    if target then
+      vim.cmd("normal! m'")
+      vim.api.nvim_win_set_cursor(win, target)
+      vim.cmd("normal! zv")
+    else
+      vim.notify(direction > 0 and "Nenhuma proxima funcao neste arquivo" or "Nenhuma funcao anterior neste arquivo")
+    end
+  end })
+end
+
+vim.api.nvim_create_user_command("NeovimGuia", function()
+  vim.cmd.edit(vim.fn.stdpath("config") .. "/README.md")
+end, {})
+
+vim.api.nvim_create_user_command("Temas", function()
+  Snacks.picker.colorschemes({
+    transform = function(item)
+      item.file = vim.fn.stdpath("config") .. "/examples/theme-preview.c"
+    end,
+  })
+end, { desc = "Temas com previa de codigo" })
+
+vim.api.nvim_create_user_command("TerminalBuffer", function()
+  vim.cmd.enew()
+  vim.cmd.terminal()
+  vim.cmd.startinsert()
+end, { desc = "Novo terminal como buffer" })
+
+vim.api.nvim_create_user_command("Changes", "DiffviewOpen --untracked-files=all", { desc = "Revisar todas as alteracoes do Git" })
+
+bind("<C-s>", "<Cmd>write<CR>", "Salvar", editor_modes)
+bind("<C-z>", "<Cmd>undo<CR>", "Desfazer", editor_modes)
+bind("<C-S-z>", "<Cmd>redo<CR>", "Refazer", editor_modes)
+bind("<C-a>", "ggVG", "Selecionar tudo", { "n", "v" })
+bind("<C-a>", "<Esc>ggVG", "Selecionar tudo", "i")
+bind("<C-c>", '"+y', "Copiar selecao", "v")
+bind("<C-x>", '"+d', "Recortar selecao", "v")
+bind("<C-v>", '"+p', "Colar", { "n", "v" })
+bind("<C-v>", "<C-r><C-p>+", "Colar", "i")
+bind("<C-d>", "<Cmd>copy .<CR>", "Duplicar linha", { "n", "i" })
+bind("<C-y>", "<Cmd>delete _<CR>", "Apagar linha", { "n", "i" })
+bind("<C-f>", function() Snacks.picker.lines() end, "Buscar no arquivo", editor_modes)
+bind("<C-S-f>", function() Snacks.picker.grep() end, "Buscar no projeto", editor_modes)
+bind("<C-e>", function() Snacks.picker.files() end, "Abrir arquivo", editor_modes)
+bind("<C-n>", "<Cmd>enew<CR><Cmd>startinsert<CR>", "Novo buffer", editor_modes)
+bind("<C-S-n>", function() Snacks.picker.files() end, "Abrir arquivo", editor_modes)
+bind("<C-M-n>", function() Snacks.picker.files() end, "Abrir arquivo", editor_modes)
+bind("<C-S-a>", function() Snacks.picker.commands() end, "Paleta de comandos", editor_modes)
+bind("<M-1>", function() Snacks.explorer() end, "Explorador de arquivos", editor_modes)
+bind("<M-0>", "<Cmd>Neogit<CR>", "Painel Git", editor_modes)
+bind("<C-k>", "<Cmd>Neogit<CR>", "Git e commits", editor_modes)
+bind("<M-F12>", function() Snacks.terminal() end, "Terminal", { "n", "i", "t" })
+bind("<C-Tab>", "<Cmd>bnext<CR>", "Proxima aba", editor_modes)
+bind("<C-S-Tab>", "<Cmd>bprevious<CR>", "Aba anterior", editor_modes)
+bind("<C-b>", vim.lsp.buf.definition, "Ir para definicao", editor_modes)
+bind("<C-M-b>", vim.lsp.buf.implementation, "Ir para implementacao", editor_modes)
+bind("<C-S-b>", vim.lsp.buf.type_definition, "Ir para definicao do tipo", editor_modes)
+bind("<C-M-Left>", "<Cmd>normal! 1<C-o><CR>", "Voltar na navegacao", editor_modes)
+bind("<C-M-Right>", "<Cmd>normal! 1<C-i><CR>", "Avancar na navegacao", editor_modes)
+bind("<C-M-Up>", function() M.goto_function(-1) end, "Funcao anterior", editor_modes)
+bind("<C-M-Down>", function() M.goto_function(1) end, "Proxima funcao", editor_modes)
+bind("<M-F7>", function() Snacks.picker.lsp_references() end, "Referencias", editor_modes)
+bind("<C-M-F7>", function() Snacks.picker.lsp_references() end, "Referencias", editor_modes)
+bind("<S-F6>", vim.lsp.buf.rename, "Renomear simbolo", editor_modes)
+bind("<M-CR>", vim.lsp.buf.code_action, "Acoes de codigo", editor_modes)
+bind("<C-q>", vim.lsp.buf.hover, "Documentacao", editor_modes)
+bind("<C-p>", vim.lsp.buf.signature_help, "Assinatura da funcao", editor_modes)
+bind("<C-M-l>", function() vim.lsp.buf.format({ async = true }) end, "Formatar", editor_modes)
+bind("<C-M-o>", function() require("imports").organize() end, "Organizar imports", editor_modes)
+bind("<C-S-q>", function() Snacks.picker.diagnostics_buffer() end, "Erros e avisos do arquivo", editor_modes)
+bind("<F2>", function() vim.diagnostic.jump({ count = 1, float = true }) end, "Proximo diagnostico", editor_modes)
+bind("<S-F2>", function() vim.diagnostic.jump({ count = -1, float = true }) end, "Diagnostico anterior", editor_modes)
+bind("<M-6>", function() Snacks.picker.diagnostics() end, "Diagnosticos", editor_modes)
+bind("<M-7>", function() Snacks.picker.lsp_symbols() end, "Simbolos do arquivo", editor_modes)
+bind("<C-F12>", function() Snacks.picker.lsp_symbols() end, "Simbolos do arquivo", editor_modes)
+bind("<C-S-t>", "<Cmd>TerminalBuffer<CR>", "Novo terminal como buffer", { "n", "i", "t" })
+bind("<S-Esc>", "<Cmd>confirm close<CR>", "Fechar painel atual", { "n", "i", "t" })
+map("n", "<C-/>", "gcc", { remap = true, desc = "Comentar linha" })
+map("v", "<C-/>", "gc", { remap = true, desc = "Comentar selecao" })
+map("i", "<C-/>", "<Esc>gccgi", { remap = true, desc = "Comentar linha" })
+map("n", "<C-_>", "gcc", { remap = true, desc = "Comentar linha" })
+map("v", "<C-_>", "gc", { remap = true, desc = "Comentar selecao" })
+map("i", "<C-_>", "<Esc>gccgi", { remap = true, desc = "Comentar linha" })
+bind("<M-S-Up>", "<Cmd>move .-2<CR>", "Mover linha acima", { "n", "i" })
+bind("<M-S-Down>", "<Cmd>move .+1<CR>", "Mover linha abaixo", { "n", "i" })
+
+bind("<leader><leader>", function() Snacks.picker.keymaps() end, "Todos os atalhos")
+bind("<leader>ff", function() Snacks.picker.files() end, "Abrir arquivo")
+bind("<leader>fg", function() Snacks.picker.grep() end, "Buscar no projeto")
+bind("<leader>fr", function() Snacks.picker.recent() end, "Arquivos recentes")
+bind("<leader>ft", "<Cmd>Temas<CR>", "Temas com previa")
+bind("<leader>e", function() Snacks.explorer() end, "Explorador")
+bind("<leader>w", "<Cmd>write<CR>", "Salvar")
+bind("<leader>x", "<Cmd>confirm close<CR>", "Fechar painel atual")
+bind("<leader>q", "<Cmd>confirm qall<CR>", "Sair")
+bind("<leader>h", "<Cmd>NeovimGuia<CR>", "Guia de uso")
+bind("<leader>n", function() Snacks.notifier.show_history() end, "Historico de notificacoes")
+bind("<leader>t", function() Snacks.terminal() end, "Terminal")
+bind("<leader>bn", "<Cmd>bnext<CR>", "Proxima aba")
+bind("<leader>bp", "<Cmd>bprevious<CR>", "Aba anterior")
+bind("<leader>bd", function() Snacks.bufdelete() end, "Fechar aba")
+bind("<leader>bb", function() Snacks.picker.buffers() end, "Buffers abertos")
+bind("<leader>bv", "<Cmd>vsplit<CR>", "Dividir painel a direita")
+bind("<leader>ba", "<Cmd>enew<CR><Cmd>startinsert<CR>", "Novo buffer")
+bind("<leader>bt", "<Cmd>TerminalBuffer<CR>", "Novo terminal como buffer")
+bind("<leader>cd", vim.lsp.buf.definition, "Definicao")
+bind("<leader>cr", vim.lsp.buf.rename, "Renomear")
+bind("<leader>ca", vim.lsp.buf.code_action, "Acoes de codigo")
+bind("<leader>cf", function() vim.lsp.buf.format({ async = true }) end, "Formatar")
+bind("<leader>ci", function() Snacks.picker.lsp_references() end, "Referencias")
+bind("<leader>cs", function() Snacks.picker.lsp_symbols() end, "Simbolos")
+bind("<leader>ce", vim.diagnostic.open_float, "Diagnostico da linha")
+bind("<leader>co", function() require("imports").organize() end, "Organizar imports")
+bind("<leader>cl", "<Cmd>checkhealth vim.lsp<CR>", "Estado dos servidores")
+bind("<leader>cm", "<Cmd>Mason<CR>", "Instalar servidores")
+bind("<leader>gg", "<Cmd>Neogit<CR>", "Git e commits")
+bind("<leader>gd", "<Cmd>DiffviewOpen<CR>", "Diff das alteracoes")
+bind("<leader>gv", "<Cmd>Changes<CR>", "Todas as alteracoes do Git")
+bind("<leader>gD", "<Cmd>DiffviewOpen --cached<CR>", "Diff do stage")
+bind("<leader>gq", "<Cmd>DiffviewClose<CR>", "Fechar diff")
+bind("<leader>gh", "<Cmd>DiffviewFileHistory %<CR>", "Historico do arquivo")
+bind("<leader>gH", "<Cmd>DiffviewFileHistory<CR>", "Historico do projeto")
+bind("<leader>gp", function() require("gitsigns").preview_hunk() end, "Ver trecho alterado")
+bind("<leader>gs", function() require("gitsigns").stage_hunk() end, "Stage do trecho")
+bind("<leader>gs", function() require("gitsigns").stage_hunk({ vim.fn.line("."), vim.fn.line("v") }) end, "Stage da selecao", "x")
+bind("<leader>gu", function() require("gitsigns").undo_stage_hunk() end, "Desfazer stage do trecho")
+bind("<leader>gb", function() require("gitsigns").blame_line({ full = true }) end, "Autor da linha")
+bind("<leader>gB", function() require("gitsigns").toggle_current_line_blame() end, "Mostrar / ocultar autor na linha")
+bind("]c", function() require("gitsigns").nav_hunk("next") end, "Proximo trecho alterado")
+bind("[c", function() require("gitsigns").nav_hunk("prev") end, "Trecho alterado anterior")
+bind("<leader>an", function() M.codex(false) end, "Codex: conversa / painel")
+bind("<leader>ar", function() M.codex(true) end, "Codex: retomar conversa")
+bind("<leader>op", "<Cmd>Octo pr list<CR>", "Pull requests")
+bind("<leader>ot", "<Cmd>Octo review thread<CR>", "Threads da revisao")
+bind("<leader>or", "<Cmd>Octo review start<CR>", "Iniciar revisao")
+bind("<leader>oc", "<Cmd>Octo comment add<CR>", "Adicionar comentario")
+bind("<leader>oo", "<Cmd>Octo<CR>", "Acoes do GitHub")
+
+return M
