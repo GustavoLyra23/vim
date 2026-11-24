@@ -379,6 +379,49 @@ As configurações ficam em `~/.config/nvim`, um link para `~/dotfiles/nvim`. No
 
 `:Lazy` abre o gerenciador de plugins. `:Lazy restore` restaura as versões do lockfile; atualizar plugins altera esse arquivo. `:Mason` gerencia servidores e mostra falhas de instalação. Servidores reaproveitados do Zed não aparecem como instalados no Mason. Se remover o Zed ou seus caches, instale os substitutos pelo Mason.
 
+### Mudar opções e atalhos por conta própria
+
+Use `:e $MYVIMRC` para abrir `init.lua`. As opções gerais usam `vim.opt`; por exemplo, `vim.opt.wrap = true` quebra visualmente linhas longas. Procure a opção existente e altere seu valor. Salve com `Ctrl+S` e reabra o Neovim.
+
+Os atalhos ficam em `:e ~/.config/nvim/lua/keymaps.lua`. Para descobrir quem definiu uma combinação, execute `:verbose nmap <C-M-l>`; troque `nmap` por `imap` para conferir o modo de edição. `Espaço Espaço` também permite procurar atalhos pela descrição.
+
+Um exemplo usando o histórico visual já instalado:
+
+```lua
+vim.keymap.set("n", "<leader>u", function()
+  Snacks.picker.undo()
+end, { desc = "Historico de edicao", silent = true })
+```
+
+Coloque esse exemplo antes do `return M` no fim de `keymaps.lua`. `n` significa modo normal; `i`, modo de edição. `<leader>` é Espaço, `<C-...>` é Ctrl, `<M-...>` é Alt e `<S-...>` é Shift. Se o atalho já existir, edite a definição correspondente para evitar duplicação. O exemplo acima não foi adicionado aos atalhos.
+
+### Adicionar um plugin pelo Lazy
+
+1. Abra o README do plugin e confira seus requisitos e o exemplo para `lazy.nvim`.
+2. Execute `:e ~/.config/nvim/lua/plugins.lua`.
+3. Dentro do `return { ... }` existente, antes do último `}`, acrescente o bloco do plugin. Mantenha a vírgula entre os blocos.
+
+Por exemplo, para instalar o [Grug Far](https://github.com/MagicDuck/grug-far.nvim), que busca e substitui texto com prévia, adicione somente este bloco:
+
+```lua
+{
+  "MagicDuck/grug-far.nvim",
+  cmd = "GrugFar",
+  opts = {},
+},
+```
+
+O primeiro campo identifica o repositório no GitHub. `cmd` carrega o plugin quando você executa aquele comando; `opts` contém as opções passadas à função `setup` do plugin. Dependências declaradas no README entram no campo `dependencies`. Esses campos estão descritos na [documentação do Lazy](https://lazy.folke.io/spec).
+
+4. Salve e reabra o Neovim para que o Lazy leia a nova configuração. Ele pode iniciar a instalação dos plugins ausentes; se precisar, execute `:Lazy install`.
+5. Espere a instalação terminar e execute `:GrugFar` para abrir o exemplo. `:Lazy` mostra o estado da instalação, e `:checkhealth grug-far` ajuda a investigar erros.
+
+O Grug Far é apenas um exemplo deste guia e não está instalado. Evite substituir o arquivo inteiro pelo exemplo de instalação de outro projeto: sua lista de plugins já existe aqui.
+
+Para atualizar plugins, use `:Lazy update`. `:Lazy sync` combina instalação, remoção de plugins fora da configuração e atualização. Para remover um plugin, apague seu bloco e os atalhos associados, salve, reabra o editor e execute `:Lazy clean`. O arquivo `lazy-lock.json` registra as versões instaladas. Referência: [comandos do Lazy](https://lazy.folke.io/usage).
+
+Se uma alteração quebrar a inicialização, abra o arquivo pelo terminal com `nvim --clean ~/.config/nvim/lua/plugins.lua` e corrija ou remova o bloco que acabou de adicionar. `:messages` mostra erros de carregamento; `:checkhealth` verifica dependências. No terminal, `git -C ~/dotfiles diff -- nvim` mostra o que mudou na configuração.
+
 Para abrir temporariamente sem esta configuração, use `nvim --clean`. Para desativá-la, renomeie o link `~/.config/nvim`; os arquivos em `~/dotfiles/nvim` permanecem. Para restaurar o Ghostty, remova apenas o link de configuração e copie o backup de volta para `~/.config/ghostty/config.ghostty`.
 
 Para restaurar o Alacritty, remova apenas o link `~/.config/alacritty/alacritty.toml` e copie `alacritty.toml.before-neovim` para esse mesmo caminho.
