@@ -10,6 +10,39 @@ function M.codex(resume)
   Snacks.terminal(cmd, { cwd = vim.fn.getcwd(), win = { position = "right", width = 0.5 } })
 end
 
+function M.goto_function(direction)
+  local buf, win = vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win()
+  local cursor = vim.api.nvim_win_get_cursor(win)
+  local tick = vim.api.nvim_buf_get_changedtick(buf)
+  local function before(a, b)
+    return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2])
+  end
+  vim.lsp.buf.document_symbol({ on_list = function(list)
+    if vim.api.nvim_get_current_win() ~= win or vim.api.nvim_get_current_buf() ~= buf
+      or vim.api.nvim_buf_get_changedtick(buf) ~= tick
+      or not vim.deep_equal(cursor, vim.api.nvim_win_get_cursor(win)) then
+      return
+    end
+    local target
+    for _, item in ipairs(list.items) do
+      if item.kind == "Function" or item.kind == "Method" or item.kind == "Constructor" then
+        local pos = { item.lnum, item.col - 1 }
+        local ahead = direction > 0 and before(cursor, pos) or direction < 0 and before(pos, cursor)
+        local nearer = not target or (direction > 0 and before(pos, target))
+          or (direction < 0 and before(target, pos))
+        if ahead and nearer then target = pos end
+      end
+    end
+    if target then
+      vim.cmd("normal! m'")
+      vim.api.nvim_win_set_cursor(win, target)
+      vim.cmd("normal! zv")
+    else
+      vim.notify(direction > 0 and "Nenhuma proxima funcao neste arquivo" or "Nenhuma funcao anterior neste arquivo")
+    end
+  end })
+end
+
 vim.api.nvim_create_user_command("NeovimGuia", function()
   vim.cmd.edit(vim.fn.stdpath("config") .. "/README.md")
 end, {})
@@ -59,6 +92,8 @@ bind("<C-M-b>", vim.lsp.buf.implementation, "Ir para implementacao", editor_mode
 bind("<C-S-b>", vim.lsp.buf.type_definition, "Ir para definicao do tipo", editor_modes)
 bind("<C-M-Left>", "<Cmd>normal! 1<C-o><CR>", "Voltar na navegacao", editor_modes)
 bind("<C-M-Right>", "<Cmd>normal! 1<C-i><CR>", "Avancar na navegacao", editor_modes)
+bind("<C-M-Up>", function() M.goto_function(-1) end, "Funcao anterior", editor_modes)
+bind("<C-M-Down>", function() M.goto_function(1) end, "Proxima funcao", editor_modes)
 bind("<M-F7>", function() Snacks.picker.lsp_references() end, "Referencias", editor_modes)
 bind("<C-M-F7>", function() Snacks.picker.lsp_references() end, "Referencias", editor_modes)
 bind("<S-F6>", vim.lsp.buf.rename, "Renomear simbolo", editor_modes)

@@ -92,6 +92,7 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Definição | `Ctrl+B` | `Espaço c d` |
 | Implementação / definição do tipo | `Ctrl+Alt+B` / `Ctrl+Shift+B` | |
 | Voltar / avançar na navegação | `Ctrl+Alt+←` / `Ctrl+Alt+→` | |
+| Função anterior / seguinte | `Ctrl+Alt+↑` / `Ctrl+Alt+↓` | |
 | Referências | `Alt+F7` ou `Ctrl+Alt+F7` | `Espaço c i` |
 | Renomear símbolo | `Shift+F6` | `Espaço c r` |
 | Ações de código | `Alt+Enter` | `Espaço c a` |
@@ -108,6 +109,23 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Todas as alterações do Git | `:Changes` | `Espaço g v` |
 
 Use `v` para selecionar caracteres e `V` para selecionar linhas. A área de transferência depende do suporte do terminal; a colagem do próprio terminal, normalmente `Ctrl+Shift+V`, também funciona.
+
+### Navegar com Ctrl+Alt e as setas
+
+`Ctrl+Alt+↓` vai para a próxima função ou método do arquivo; `Ctrl+Alt+↑` vai para a anterior. Os destinos vêm do servidor de linguagem conectado ao arquivo. Se não houver outra função naquela direção, o editor avisa e mantém o cursor. Use `:checkhealth vim.lsp` para conferir o servidor caso a navegação não encontre símbolos.
+
+`Ctrl+Alt+←` volta à posição anterior do histórico e `Ctrl+Alt+→` avança novamente. Isso inclui os saltos entre funções e as definições abertas em outros arquivos com `Ctrl+B`. Os atalhos funcionam durante a edição; `Ctrl+Alt+L` continua formatando o código.
+
+No seu GNOME, as quatro combinações estão reservadas para trocar de área de trabalho. Para liberá-las, execute uma vez no terminal do sistema:
+
+```sh
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-up '[]'
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-down '[]'
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-left "['<Super>Page_Up', '<Super>KP_Prior', '<Super><Alt>Left']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-right "['<Super>Page_Down', '<Super>KP_Next', '<Super><Alt>Right']"
+```
+
+Esses comandos mantêm a troca de áreas com `Super+Page Up/Down` e `Super+Alt+←/→`. A mudança no GNOME ficou pendente porque o ambiente da sessão de configuração não conseguiu acessar o D-Bus para gravá-la. Reabra o Neovim para carregar os novos atalhos.
 
 ### Seleção com Shift
 
@@ -436,6 +454,8 @@ O teste de janelas verifica o histórico sem borda e seu fechamento por Esc, q e
 
 O teste de imports usa servidores reais de TypeScript, Go e Python. Verifica a abertura de um erro de tipo com Ctrl+Shift+Q, o autoimport ao aceitar uma sugestão do Blink, inclusão/remoção ao salvar, organização manual, preservação de `noqa`, tratamento de timeout e os atalhos de navegação e terminal. As sequências de teclado do Alacritty também foram enviadas a um Neovim em PTY para conferir a decodificação; o teclado físico na janela gráfica não foi conferido.
 
+O teste de navegação usa o gopls para percorrer funções e métodos com Ctrl+Alt e as quatro setas, incluindo o modo de edição e a volta pelo histórico. Também verifica os limites do arquivo, símbolos fora de ordem e o descarte de respostas recebidas depois de mover o cursor, editar ou trocar de buffer. As teclas são enviadas pela API do Neovim; esse teste não passa pelos atalhos globais do GNOME.
+
 As verificações de aparência conferem o fundo uniforme, os marcadores `~` e a ausência de bordas nas janelas da busca, nos layouts vertical e horizontal. O teste de temas carrega as 642 opções da coleção, compara a paleta Pastel Branco entre os editores e confere a prévia, a confirmação e o cancelamento. A configuração do Alacritty passou pela leitura TOML e pelo comando de migração em modo de simulação.
 
 O JSON do Pastel Branco passou pelo [schema oficial de temas do Zed](https://zed.dev/schema/themes/v0.2.0.json), e as cores principais do Tomorrow Night foram comparadas com a extensão instalada. A aparência do tema novo na janela do Zed não foi conferida. Na verificação desta mudança, a suíte geral passou na segunda execução: a primeira parou ao esperar a saída do modo de edição depois de fechar o autocomplete com Esc. O teste específico de temas passou.
@@ -447,6 +467,7 @@ nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-terminal.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-git-ui.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-windows.lua
 nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-imports.lua
+nvim --headless -u NONE -i NONE -l ~/dotfiles/tests/neovim-navigation.lua
 ghostty +validate-config
 alacritty migrate --dry-run --silent --config-file ~/.config/alacritty/alacritty.toml
 git -C ~/dotfiles diff --check
