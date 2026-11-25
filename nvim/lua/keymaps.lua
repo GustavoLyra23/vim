@@ -149,6 +149,8 @@ bind("<leader>co", function() require("imports").organize() end, "Organizar impo
 bind("<leader>cl", "<Cmd>checkhealth vim.lsp<CR>", "Estado dos servidores")
 bind("<leader>cm", "<Cmd>Mason<CR>", "Instalar servidores")
 bind("<leader>gg", "<Cmd>Neogit<CR>", "Git e commits")
+bind("<leader>gf", function() Snacks.picker.git_status() end, "Buscar arquivos alterados")
+bind("<leader>gF", function() Snacks.picker.git_diff() end, "Buscar trechos do diff")
 bind("<leader>gd", "<Cmd>DiffviewOpen<CR>", "Diff das alteracoes")
 bind("<leader>gv", "<Cmd>Changes<CR>", "Todas as alteracoes do Git")
 bind("<leader>gD", "<Cmd>DiffviewOpen --cached<CR>", "Diff do stage")

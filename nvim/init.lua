@@ -11,6 +11,7 @@ vim.opt.termguicolors = true
 vim.opt.winborder = "none"
 vim.opt.fillchars:append({ eob = "~" })
 vim.opt.cursorline = true
+vim.opt.guicursor = "a:hor20"
 vim.opt.signcolumn = "yes"
 vim.opt.wrap = false
 vim.opt.scrolloff = 5

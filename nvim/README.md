@@ -106,6 +106,8 @@ Na coluna alternativa, as teclas depois de `Espaço` são uma sequência, em mod
 | Terminal integrado | `Alt+F12` | `Espaço t` |
 | Novo terminal como buffer | `Ctrl+Shift+T` | `Espaço b t` |
 | Git e commits | `Ctrl+K` ou `Alt+0` | `Espaço g g` |
+| Buscar arquivos alterados | | `Espaço g f` |
+| Buscar trechos do diff | | `Espaço g F` |
 | Todas as alterações do Git | `:Changes` | `Espaço g v` |
 
 Use `v` para selecionar caracteres e `V` para selecionar linhas. A área de transferência depende do suporte do terminal; a colagem do próprio terminal, normalmente `Ctrl+Shift+V`, também funciona.
@@ -275,6 +277,10 @@ O Pastel Branco usa fundo `#fdfcf9`, texto escuro, comentários verdes, palavras
 O Zed continua com Tomorrow Night selecionado até você trocar pelo seletor. Seus outros temas locais foram preservados. Os dois editores compartilham a paleta do Pastel Branco, mas podem classificar um mesmo trecho de código de formas diferentes. O tema Tomorrow Night do Neovim usa as cores da [extensão Tomorrow do Zed](https://github.com/biaqat/tomorrow-theme-zed), versão 1.2.1 instalada nesta máquina.
 
 ## Git: revisar e montar commits por trecho
+
+`Espaço g f` abre a busca de arquivos alterados, incluindo arquivos novos e mudanças no stage, com prévia. `Espaço g F`, com F maiúsculo, busca os trechos do diff dos arquivos rastreados, dentro e fora do stage. Para encontrar um arquivo novo ainda fora do Git, use a busca de arquivos alterados.
+
+Digite para filtrar, escolha com as setas e pressione Enter para abrir o resultado no editor. Na busca de trechos, o cursor vai para a região do diff. Esc fecha a busca; pressione novamente se a primeira tecla só sair da digitação. As listas refletem os arquivos salvos em disco; abrir e navegar na busca preserva os rascunhos e o stage.
 
 Ao parar o cursor por meio segundo, o fim da linha mostra o autor, a data e a mensagem do último commit que alterou aquele trecho. Uma linha ainda não commitada mostra `Alteração local (sem commit)`. Essa indicação vem do histórico do Git e não identifica quem digitou uma alteração ainda sem commit. `Espaço g B`, com B maiúsculo, mostra ou oculta a indicação; `Espaço g b` abre os detalhes.
 
